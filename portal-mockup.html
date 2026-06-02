@@ -625,6 +625,111 @@ select.input { appearance: none; -webkit-appearance: none; cursor: pointer; padd
 .exec-cta { width: 100%; justify-content: center; margin-top: var(--sp-5); }
 
 /* ============================================================
+   SCRIPT BUILDER — visual step editor
+   ============================================================ */
+.builder-body { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 380px; }
+.canvas {
+  overflow-y: auto; min-height: 0; padding: var(--sp-5) var(--sp-5) 64px;
+  background: radial-gradient(120% 60% at 50% 0%, color-mix(in srgb, var(--primary) 5%, transparent), transparent 55%), var(--bg);
+}
+.canvas-inner { max-width: 720px; margin: 0 auto; }
+
+/* tint for CustomCode/slate */
+.tint-slate{background:var(--surface-3);color:var(--text-2)}
+.tint-cyan{background:rgba(94,211,240,.16);color:#2f86d6}
+[data-theme="dark"] .tint-cyan{color:#5ed3f0}
+
+/* start / end terminals */
+.bl-terminal {
+  display: flex; align-items: center; justify-content: center; gap: 8px; width: fit-content;
+  margin: 0 auto; font-size: 12px; font-weight: 600;
+  color: var(--text-3); padding: 5px 12px; border-radius: 99px;
+  background: var(--surface-2); border: 1px solid var(--border);
+}
+.bl-terminal svg { width: 14px; height: 14px; }
+.bl-terminal .bl-dot { width: 9px; height: 9px; border-radius: 99px; background: var(--ok); }
+.bl-terminal.end { color: var(--text-2); }
+
+/* connector line + add button between steps */
+.bconn { position: relative; height: 26px; display: grid; place-items: center; }
+.bconn::before { content: ''; position: absolute; top: 0; bottom: 0; left: 50%; transform: translateX(-50%); width: 2px; background: var(--border); }
+.badd {
+  position: relative; z-index: 1; width: 26px; height: 26px; border-radius: 99px;
+  display: grid; place-items: center; cursor: pointer;
+  background: var(--surface); border: 1px dashed var(--border-2); color: var(--text-3);
+  transition: color .12s, border-color .12s, background .12s, transform .08s;
+}
+.badd:hover { color: var(--primary); border-color: var(--primary-ring); background: var(--primary-soft); transform: scale(1.08); }
+.badd svg { width: 15px; height: 15px; }
+
+/* step card */
+.bstep {
+  display: grid; grid-template-columns: 36px 1fr auto; align-items: center; gap: var(--sp-3);
+  padding: 11px var(--sp-4); background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); box-shadow: var(--shadow-sm); cursor: pointer; position: relative;
+  transition: border-color .12s, box-shadow .12s, transform .06s;
+}
+.bstep:hover { border-color: var(--border-2); box-shadow: var(--shadow-md); }
+.bstep.active { border-color: var(--primary-ring); box-shadow: 0 0 0 3px var(--primary-soft), var(--shadow-sm); }
+.bstep.active::before { content:''; position:absolute; left:0; top:10px; bottom:10px; width:3px; border-radius:99px; background: var(--primary); }
+.bs-ic { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; flex: none; }
+.bs-ic svg { width: 18px; height: 18px; }
+.bs-main { min-width: 0; }
+.bs-kind { font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--text-3); }
+.bstep.active .bs-kind { color: var(--primary); }
+.bs-name { font-size: 13.5px; font-weight: 600; color: var(--text); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bs-sub { font-size: 11.5px; color: var(--text-3); font-family: var(--font-mono); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bs-actions { display: flex; align-items: center; gap: 2px; opacity: 0; transition: opacity .12s; }
+.bstep:hover .bs-actions, .bstep.active .bs-actions { opacity: 1; }
+.bs-actions .icon-btn.xs { width: 30px; height: 30px; background: transparent; border-color: transparent; }
+.bs-actions .icon-btn.xs:hover { background: var(--surface-2); }
+.bs-grip { color: var(--text-3); cursor: grab; display: grid; place-items: center; padding: 0 2px; }
+.bs-grip svg { width: 15px; height: 15px; }
+
+/* loop container (ForEach) */
+.bloop { border: 1.5px solid var(--primary-ring); border-radius: var(--r-lg); background: color-mix(in srgb, var(--primary) 5%, var(--surface)); box-shadow: var(--shadow-sm); position: relative; overflow: hidden; }
+.bloop-head {
+  display: grid; grid-template-columns: 36px 1fr auto; align-items: center; gap: var(--sp-3);
+  padding: 11px var(--sp-4); cursor: pointer; border-bottom: 1px solid var(--primary-ring);
+  background: var(--primary-soft); transition: background .12s;
+}
+.bloop-head:hover { background: color-mix(in srgb, var(--primary) 12%, transparent); }
+.bloop.active { box-shadow: 0 0 0 3px var(--primary-soft), var(--shadow-md); }
+.bloop-ic { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; flex: none; background: var(--primary); color: #fff; }
+.bloop-ic svg { width: 18px; height: 18px; }
+.bl-kind { font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--primary); }
+.bl-title { font-size: 13.5px; font-weight: 600; color: var(--text); margin-top: 1px; }
+.bl-title .mono { color: var(--primary); font-weight: 600; }
+.bloop-body { padding: var(--sp-3) var(--sp-4) var(--sp-3) var(--sp-5); position: relative; }
+.bloop-body::before { content: ''; position: absolute; left: 22px; top: 4px; bottom: 4px; width: 2px; border-radius: 99px; background: var(--primary-ring); }
+.bloop-foot { display: flex; align-items: center; gap: 7px; padding: 8px var(--sp-4) 11px var(--sp-5); font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--primary); }
+.bloop-foot svg { width: 13px; height: 13px; }
+.bloop-empty { font-size: 12.5px; color: var(--text-3); padding: 14px; text-align: center; border: 1px dashed var(--primary-ring); border-radius: var(--r-md); background: var(--surface); }
+
+/* inspector form helpers reused from .fld/.input */
+.bi-type-row { display: flex; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-4); }
+.bi-type-row .bs-ic { width: 30px; height: 30px; border-radius: 8px; }
+.bi-type-row .bs-ic svg { width: 15px; height: 15px; }
+.bi-danger { margin-top: var(--sp-5); padding-top: var(--sp-4); border-top: 1px solid var(--border); }
+textarea.input { resize: vertical; min-height: 96px; line-height: 1.6; }
+
+/* step palette popover */
+.palette {
+  position: fixed; z-index: var(--z-modal); width: 240px; max-height: 70vh; overflow-y: auto;
+  background: var(--surface); border: 1px solid var(--border-2); border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg); padding: var(--sp-2); display: none;
+  animation: modalIn .14s var(--ease);
+}
+.palette.open { display: block; }
+.palette .pal-label { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); padding: 8px var(--sp-3) 4px; }
+.pal-item { display: flex; align-items: center; gap: var(--sp-3); padding: 8px var(--sp-3); border-radius: var(--r-md); cursor: pointer; transition: background .1s; }
+.pal-item:hover { background: var(--surface-2); }
+.pal-ic { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; flex: none; }
+.pal-ic svg { width: 16px; height: 16px; }
+.pal-item .pal-main b { font-size: 13px; font-weight: 600; display: block; }
+.pal-item .pal-main small { font-size: 11px; color: var(--text-3); }
+
+/* ============================================================
    MODAL
    ============================================================ */
 .modal-scrim { position: fixed; inset: 0; background: var(--scrim); z-index: var(--z-modal); display: none; place-items: center; padding: var(--sp-5); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
@@ -656,7 +761,7 @@ select.input { appearance: none; -webkit-appearance: none; cursor: pointer; padd
     <nav class="nav">
       <div class="nav-group">
         <div class="nav-item" data-view="dashboard"><i data-lucide="layout-dashboard"></i> Dashboard</div>
-        <div class="nav-item" data-view="flows"><i data-lucide="git-branch"></i> Flows <span class="badge-count">8</span></div>
+        <div class="nav-item" data-view="scripts"><i data-lucide="file-code-2"></i> Scripts <span class="badge-count">8</span></div>
         <div class="nav-item active" data-view="orders"><i data-lucide="shopping-cart"></i> Orders <span class="badge-count">6</span></div>
       </div>
       <div class="nav-group">
@@ -914,7 +1019,7 @@ select.input { appearance: none; -webkit-appearance: none; cursor: pointer; padd
       <div class="scroll"><div class="pad">
         <div class="page-head">
           <div class="t"><h2>Dashboard</h2><p>Procurement automation across all vendors · last 30 days</p></div>
-          <div class="actions"><button class="btn"><i data-lucide="calendar"></i> Last 30 days</button><button class="btn primary"><i data-lucide="plus"></i> New flow</button></div>
+          <div class="actions"><button class="btn"><i data-lucide="calendar"></i> Last 30 days</button><button class="btn primary"><i data-lucide="plus"></i> New script</button></div>
         </div>
         <div class="stat-grid">
           <div class="card stat"><div class="label"><i data-lucide="play-circle"></i> Executions</div><div class="v num">1,284</div><div class="sub trend-up"><i data-lucide="trending-up"></i> 12.4% vs prev</div></div>
@@ -930,15 +1035,67 @@ select.input { appearance: none; -webkit-appearance: none; cursor: pointer; padd
       </div></div>
     </section>
 
-    <!-- ===================== FLOWS ===================== -->
-    <section class="view" id="view-flows">
+    <!-- ===================== SCRIPTS ===================== -->
+    <section class="view" id="view-scripts">
       <div class="scroll"><div class="pad">
         <div class="page-head">
-          <div class="t"><h2>Flows</h2><p>Reusable purchase automations. Each edit creates a new version.</p></div>
-          <div class="actions"><button class="btn"><i data-lucide="sparkles"></i> Build with AI</button><button class="btn primary"><i data-lucide="plus"></i> New flow</button></div>
+          <div class="t"><h2>Scripts</h2><p>Reusable purchase automations. Open a script to edit its steps — each save creates a new version.</p></div>
+          <div class="actions"><button class="btn"><i data-lucide="sparkles"></i> Build with AI</button><button class="btn primary" onclick="openScript(-1)"><i data-lucide="plus"></i> New script</button></div>
         </div>
         <div class="flow-card-grid" id="flowCards"></div>
       </div></div>
+    </section>
+
+    <!-- ===================== SCRIPT BUILDER ===================== -->
+    <section class="view" id="view-builder">
+      <!-- builder header -->
+      <div class="exec-head">
+        <button class="icon-btn back" title="Back to scripts" aria-label="Back to scripts" onclick="go('scripts')"><i data-lucide="arrow-left"></i></button>
+        <div class="exec-title">
+          <div class="row1">
+            <span class="flow-ic tint-indigo" id="blIcon" style="width:30px;height:30px"><i data-lucide="file-code-2"></i></span>
+            <h2 id="blName">Script</h2>
+            <span class="pill idle" id="blVer"><span class="dot"></span> v1 · draft</span>
+          </div>
+          <div class="row2">
+            <span class="id-chip" id="blId">script_new</span>
+            <span class="sep"></span><i data-lucide="store" style="width:13px"></i><span id="blVendor">Vendor</span>
+            <span class="sep"></span><i data-lucide="list-ordered" style="width:13px"></i><span id="blStepCount">0 steps</span>
+          </div>
+        </div>
+        <div class="exec-actions">
+          <button class="btn sm"><i data-lucide="sparkles"></i> Build with AI</button>
+          <button class="btn sm"><i data-lucide="play"></i> Test run</button>
+          <button class="btn sm primary"><i data-lucide="check"></i> Save version</button>
+        </div>
+      </div>
+
+      <!-- 2-pane body: canvas + inspector -->
+      <div class="builder-body">
+        <!-- CENTER: step canvas -->
+        <div class="canvas">
+          <div class="canvas-inner">
+            <!-- start node -->
+            <div class="bl-terminal start"><span class="bl-dot"></span> Start</div>
+            <div id="builderSteps"><!-- injected --></div>
+            <!-- end node -->
+            <div class="bl-terminal end"><i data-lucide="flag"></i> End of script</div>
+          </div>
+        </div>
+
+        <!-- RIGHT: step inspector -->
+        <div class="inspector">
+          <div class="insp-head">
+            <div class="k" id="biKind">STEP</div>
+            <h3 id="biName">Select a step</h3>
+            <div class="meta" id="biMeta"></div>
+          </div>
+          <div class="insp-scroll" id="builderInspector">
+            <div class="empty"><i data-lucide="mouse-pointer-click" style="width:28px;height:28px;opacity:.5"></i>
+              <p style="margin-top:8px">Select a step on the left to edit it, or use a <b>+</b> button to add a new one.</p></div>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- ===================== PARAMETERS ===================== -->
@@ -1194,6 +1351,9 @@ select.input { appearance: none; -webkit-appearance: none; cursor: pointer; padd
   </div>
 </div>
 
+<!-- ===================== STEP PALETTE (builder add-step popover) ===================== -->
+<div class="palette" id="stepPalette" role="menu" aria-label="Add step"></div>
+
 <script>
 /* ============================================================
    DATA
@@ -1367,7 +1527,7 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
 
 /* ============ sidebar nav / views ============ */
 const CRUMB = {
-  dashboard:['Dashboard'], flows:['Flows'], orders:['Orders'],
+  dashboard:['Dashboard'], scripts:['Scripts'], orders:['Orders'],
   parameters:['Parameters'], vendors:['Vendors'], credentials:['Credentials'], settings:['Settings']
 };
 /* breadcrumb parts per view — last entry is the current (bold) page */
@@ -1375,12 +1535,14 @@ function crumbParts(view){
   if(view==='vendor-detail') return [{l:'Vendors',v:'vendors'},{l:curVendor?curVendor.name:'Vendor'}];
   if(view==='order-detail')  return [{l:'Orders',v:'orders'},{l:curOrder?curOrder.name:'Order'}];
   if(view==='executions')    return [{l:'Orders',v:'orders'},{l:curOrder?curOrder.name:'Order',v:'order-detail'},{l:'Run #'+curAttempt}];
+  if(view==='builder')       return [{l:'Scripts',v:'scripts'},{l:curScript?curScript.name:'Script'}];
   return CRUMB[view].map(l=>({l}));
 }
 function go(view){
   let navTarget = view;
   if(view==='vendor-detail') navTarget='vendors';
   if(view==='order-detail'||view==='executions') navTarget='orders';
+  if(view==='builder') navTarget='scripts';
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.view===navTarget));
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   $('#view-'+view).classList.add('active');
@@ -1426,10 +1588,10 @@ const FLOWS = [
   ['GitHub — Copilot Business','github','tint-indigo','Provisions Copilot Business seats and exports assignments.','v5','100%',[1,1,1,1,1]],
   ['1Password — Teams expansion','key-round','tint-green','Expands the Teams plan and captures the new invoice.','v1','61%',[1,0,1,0,1,1]],
 ];
-$('#flowCards').innerHTML = FLOWS.map(f=>`
-  <div class="card flow-card" onclick="go('orders')">
+$('#flowCards').innerHTML = FLOWS.map((f,i)=>`
+  <div class="card flow-card" onclick="openScript(${i})">
     <div class="fc-head"><div class="flow-ic ${f[2]}"><i data-lucide="${f[1]}"></i></div>
-      <div style="min-width:0"><h4>${f[0]}</h4><span class="cell-mut" style="font-size:11.5px">Flow · ${f[4]}</span></div></div>
+      <div style="min-width:0"><h4>${f[0]}</h4><span class="cell-mut" style="font-size:11.5px">Script · ${f[4]}</span></div></div>
     <div class="fc-desc">${f[3]}</div>
     <div class="fc-foot">
       <span class="spark">${f[6].map(v=>`<i class="${v?'':'f'}" style="height:${6+Math.random()*16}px"></i>`).join('')}</span>
@@ -1874,6 +2036,283 @@ const CREDS = [
 $('#credRows').innerHTML = CREDS.map(c=>`<tr>
   <td class="flow-cell"><span class="flow-ic tint-green"><i data-lucide="key-round"></i></span><span class="param-tag"><b>${c[0]}</b></span></td>
   <td>${c[1]}</td><td class="cell-mut">${c[2]}</td><td class="cell-mut mono">${c[3]}</td></tr>`).join('');
+
+/* ============================================================
+   SCRIPT BUILDER — visual step editor (mirrors the WPF DSL)
+   ============================================================ */
+let curScript = null, selB = null;
+let _uid = 0;
+const buid = () => 'step_' + String(++_uid).padStart(2,'0');
+const tx = s => (s==null?'':String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])));
+const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'').slice(0,28) || 'script';
+
+/* step kind → icon, tint, palette description */
+const BKIND = {
+  Navigate:          {ic:'compass',              tint:'tint-indigo', desc:'Go to a URL or path'},
+  Click:             {ic:'mouse-pointer-click',  tint:'tint-green',  desc:'Click an element'},
+  Fill:              {ic:'pencil',               tint:'tint-amber',  desc:'Type into a field'},
+  Extract:           {ic:'download',             tint:'tint-cyan',   desc:'Read a value into a variable'},
+  WaitForSelector:   {ic:'timer',                tint:'tint-slate',  desc:'Wait for an element'},
+  Screenshot:        {ic:'camera',               tint:'tint-pink',   desc:'Capture the page'},
+  ConditionalBranch: {ic:'git-fork',             tint:'tint-pink',   desc:'Branch on a condition'},
+  CustomCode:        {ic:'code-2',               tint:'tint-slate',  desc:'C# escape hatch'},
+  ForEach:           {ic:'repeat',               tint:'tint-indigo', desc:'Loop over a collection'},
+};
+const BLABEL = { Navigate:'Navigate', Click:'Click', Fill:'Fill', Extract:'Extract', WaitForSelector:'Wait for selector', Screenshot:'Screenshot', ConditionalBranch:'If / branch', CustomCode:'C# code', ForEach:'For each' };
+const labelOf = k => BLABEL[k] || k;
+const PALETTE = [
+  { grp:'Actions', kinds:['Navigate','Click','Fill','Extract','WaitForSelector','Screenshot'] },
+  { grp:'Logic',   kinds:['ForEach','ConditionalBranch','CustomCode'] },
+];
+
+function bnode(kind, name, extra){ return Object.assign({ id:buid(), kind, name }, extra||{}); }
+function defaultNode(kind){
+  const base = {
+    Navigate:{url:'/'}, Click:{selector:''}, Fill:{selector:'',value:''},
+    Extract:{selector:'',output:'value'}, WaitForSelector:{selector:'',value:'30000'},
+    Screenshot:{value:'fullPage'}, ConditionalBranch:{condition:''},
+    CustomCode:{code:'// C# escape hatch\nawait page.ClickAsync("#button");'},
+    ForEach:{iterable:'order.products', itemVar:'product', children:[]},
+  }[kind] || {};
+  return bnode(kind, labelOf(kind), base);
+}
+
+/* the demo script matches the procurement loop pattern */
+function demoScript(name, vendor, version){
+  return { name, vendor, version, draft:false, steps:[
+    bnode('Navigate','Go to vendor page',{url:'https://acme-devtools.com/products'}),
+    bnode('ForEach','Loop over order products',{ iterable:'order.products', itemVar:'product', children:[
+      bnode('Click','Click product card',{selector:'.product-card[data-sku="{{product.sku}}"]'}),
+      bnode('Fill','Change quantity',{selector:'input.qty', value:'{{product.quantity}}'}),
+      bnode('Click','Add to cart',{selector:'button.add-to-cart'}),
+      bnode('Navigate','Go back to product list',{url:'/products'}),
+    ]}),
+    bnode('Navigate','Proceed to checkout',{url:'/checkout'}),
+    bnode('Fill','Apply coupon code',{selector:'#coupon', value:'{{couponCode}}'}),
+    bnode('Click','Place order',{selector:'button#place-order'}),
+    bnode('Extract','Capture license keys',{selector:'.license-key', output:'licenseKeys'}),
+    bnode('Screenshot','Save confirmation',{value:'fullPage'}),
+  ]};
+}
+
+function openScript(i){
+  if(i>=0){ const f = FLOWS[i]; curScript = demoScript(f[0], f[0].split('—')[0].trim(), f[4]); }
+  else { curScript = { name:'Untitled script', vendor:'—', version:'v1', draft:true,
+    steps:[ bnode('Navigate','Go to vendor page',{url:''}) ] }; }
+  selB = null;
+  renderBuilder();
+  renderInspector();
+  go('builder');
+}
+
+const countSteps = list => list.reduce((c,n)=> c + 1 + (n.children?countSteps(n.children):0), 0);
+function findNode(id, list){ list = list || curScript.steps;
+  for(const n of list){ if(n.id===id) return n; if(n.children){ const r = findNode(id, n.children); if(r) return r; } }
+  return null;
+}
+function removeNode(id, list){ list = list || curScript.steps;
+  const i = list.findIndex(n=>n.id===id);
+  if(i>=0){ list.splice(i,1); return true; }
+  for(const n of list){ if(n.children && removeNode(id, n.children)) return true; }
+  return false;
+}
+
+function setBuilderHeader(){
+  const s = curScript;
+  $('#blName').textContent = s.name;
+  $('#blVer').className = 'pill ' + (s.draft ? 'idle' : 'ok');
+  $('#blVer').innerHTML = `<span class="dot"></span> ${s.version}${s.draft?' · draft':''}`;
+  $('#blId').textContent = 'script_' + (s.draft ? 'new' : slug(s.name));
+  $('#blVendor').textContent = s.vendor;
+  $('#blStepCount').textContent = countSteps(s.steps) + ' steps';
+}
+
+/* ---- canvas render ---- */
+function subOf(n){
+  switch(n.kind){
+    case 'Navigate': return n.url || '—';
+    case 'Click': return n.selector || '—';
+    case 'Fill': return (n.selector||'?') + ' = ' + (n.value||'');
+    case 'Extract': return (n.selector||'?') + ' → {{' + (n.output||'value') + '}}';
+    case 'WaitForSelector': return (n.selector||'—') + (n.value?'  ·  '+n.value+'ms':'');
+    case 'Screenshot': return n.value || 'fullPage';
+    case 'ConditionalBranch': return 'if ' + (n.condition || '…');
+    case 'CustomCode': return (n.code||'').split('\n')[0] || 'C# script';
+    default: return '';
+  }
+}
+function conn(parentId, index){
+  return `<div class="bconn"><button class="badd" title="Add step here" aria-label="Add step"
+    onclick="openPalette(event,'${parentId}',${index})"><i data-lucide="plus"></i></button></div>`;
+}
+function renderNodes(list, parentId){
+  let html = conn(parentId, 0);
+  list.forEach((n,idx)=>{ html += renderNode(n) + conn(parentId, idx+1); });
+  return html;
+}
+function renderNode(n){
+  const m = BKIND[n.kind] || BKIND.CustomCode;
+  if(n.kind==='ForEach'){
+    const inner = renderNodes(n.children||[], n.id)
+      + ((n.children&&n.children.length)?'':`<div class="bloop-empty">Loop body is empty — use + to add steps</div>`);
+    return `<div class="bloop ${n.id===selB?'active':''}" data-id="${n.id}">
+      <div class="bloop-head" onclick="selectStep('${n.id}')">
+        <div class="bloop-ic"><i data-lucide="repeat"></i></div>
+        <div style="min-width:0">
+          <div class="bl-kind">For each</div>
+          <div class="bl-title"><span class="mono">${tx(n.itemVar||'item')}</span> in <span class="mono">${tx(n.iterable||'collection')}</span></div>
+        </div>
+        <div class="bs-actions">
+          <button class="icon-btn xs" title="Delete loop" aria-label="Delete loop"
+            onclick="event.stopPropagation();deleteStep('${n.id}')"><i data-lucide="trash-2"></i></button>
+        </div>
+      </div>
+      <div class="bloop-body">${inner}</div>
+      <div class="bloop-foot"><i data-lucide="corner-down-left"></i> End loop</div>
+    </div>`;
+  }
+  return `<div class="bstep ${n.id===selB?'active':''}" data-id="${n.id}" onclick="selectStep('${n.id}')">
+    <div class="bs-ic ${m.tint}"><i data-lucide="${m.ic}"></i></div>
+    <div class="bs-main">
+      <div class="bs-kind">${labelOf(n.kind)}</div>
+      <div class="bs-name">${tx(n.name||labelOf(n.kind))}</div>
+      <div class="bs-sub">${tx(subOf(n))}</div>
+    </div>
+    <div class="bs-actions">
+      <span class="bs-grip" title="Drag to reorder"><i data-lucide="grip-vertical"></i></span>
+      <button class="icon-btn xs" title="Delete step" aria-label="Delete step"
+        onclick="event.stopPropagation();deleteStep('${n.id}')"><i data-lucide="trash-2"></i></button>
+    </div>
+  </div>`;
+}
+function renderBuilder(){
+  setBuilderHeader();
+  $('#builderSteps').innerHTML = renderNodes(curScript.steps, 'root');
+  lucide.createIcons();
+}
+function refreshCard(id){
+  const n = findNode(id); if(!n) return;
+  const el = document.querySelector(`#builderSteps [data-id="${id}"]`); if(!el) return;
+  if(n.kind==='ForEach'){
+    const t = el.querySelector('.bl-title');
+    if(t) t.innerHTML = `<span class="mono">${tx(n.itemVar||'item')}</span> in <span class="mono">${tx(n.iterable||'collection')}</span>`;
+  } else {
+    const nm = el.querySelector('.bs-name'); if(nm) nm.textContent = n.name || labelOf(n.kind);
+    const sb = el.querySelector('.bs-sub'); if(sb) sb.textContent = subOf(n);
+  }
+}
+
+/* ---- inspector ---- */
+const emptyInspector = `<div class="empty"><i data-lucide="mouse-pointer-click" style="width:28px;height:28px;opacity:.5"></i>
+  <p style="margin-top:8px">Select a step on the left to edit it, or use a <b>+</b> button to add a new one.</p></div>`;
+function biFld(label, inner, help){
+  return `<div class="fld"><label>${label}</label>${inner}${help?`<div class="help"><i data-lucide="info"></i> ${help}</div>`:''}</div>`;
+}
+function biInput(key, val, mono, ph){
+  return `<input class="input ${mono?'mono':''}" value="${esc(val||'')}" placeholder="${esc(ph||'')}"
+    oninput="updateField('${selB}','${key}',this.value)" />`;
+}
+function biArea(key, val, ph){
+  return `<textarea class="input mono" placeholder="${esc(ph||'')}" oninput="updateField('${selB}','${key}',this.value)">${tx(val||'')}</textarea>`;
+}
+function biSelect(key, val, opts){
+  return `<select class="input" onchange="updateField('${selB}','${key}',this.value)">${
+    opts.map(o=>`<option ${o===val?'selected':''}>${o}</option>`).join('')}</select>`;
+}
+function kindFields(n){
+  const sel = ()=> biFld('Selector', biInput('selector', n.selector, true, 'CSS selector, e.g. button.add-to-cart'));
+  switch(n.kind){
+    case 'Navigate': return biFld('URL / path', biInput('url', n.url, true, 'https://… or /path'));
+    case 'Click': return sel();
+    case 'Fill': return sel() + biFld('Value', biInput('value', n.value, true, 'static text or {{param}}'), 'Supports parameters, e.g. {{product.quantity}}.');
+    case 'Extract': return sel() + biFld('Output variable', biInput('output', n.output, true, 'licenseKeys'), 'Captured value, reusable as {{var}} in later steps.');
+    case 'WaitForSelector': return sel() + biFld('Timeout (ms)', biInput('value', n.value, true, '30000'));
+    case 'Screenshot': return biFld('Capture mode', biSelect('value', n.value||'fullPage', ['fullPage','viewport','element']));
+    case 'ConditionalBranch': return biFld('Condition', biInput('condition', n.condition, true, 'isVisible(".g-recaptcha")'), 'Then / else branches run nested steps.');
+    case 'CustomCode': return biFld('C# script', biArea('code', n.code, 'await page.ClickAsync("#button");'), 'Escape hatch — Playwright C# with access to script variables.');
+    case 'ForEach': return biFld('Collection to iterate', biInput('iterable', n.iterable, true, 'order.products'), 'An array variable or parameter.')
+      + biFld('Item variable', biInput('itemVar', n.itemVar, true, 'product'), 'Each element binds here — reference it as {{product}} inside the loop.');
+    default: return '';
+  }
+}
+function renderInspector(){
+  const host = $('#builderInspector');
+  if(!selB || !curScript){ host.innerHTML = emptyInspector; $('#biKind').textContent='STEP'; $('#biName').textContent='Select a step'; $('#biMeta').innerHTML=''; lucide.createIcons(); return; }
+  const n = findNode(selB);
+  if(!n){ selB=null; return renderInspector(); }
+  const m = BKIND[n.kind] || BKIND.CustomCode;
+  $('#biKind').textContent = labelOf(n.kind).toUpperCase();
+  $('#biName').textContent = n.name || labelOf(n.kind);
+  $('#biMeta').innerHTML = `<span class="id-chip">${n.id}</span>`;
+  host.innerHTML =
+    `<div class="bi-type-row"><span class="bs-ic ${m.tint}"><i data-lucide="${m.ic}"></i></span>
+      <div><b style="font-size:13px">${labelOf(n.kind)}</b><div style="font-size:11.5px;color:var(--text-3)">${m.desc}</div></div></div>`
+    + biFld('Step name', biInput('name', n.name, false, labelOf(n.kind)))
+    + kindFields(n)
+    + `<div class="bi-danger"><button class="btn sm danger" onclick="deleteStep('${n.id}')"><i data-lucide="trash-2"></i> Delete ${n.kind==='ForEach'?'loop':'step'}</button></div>`;
+  lucide.createIcons();
+}
+
+/* ---- interaction ---- */
+function selectStep(id){
+  selB = id;
+  document.querySelectorAll('#builderSteps .bstep, #builderSteps .bloop')
+    .forEach(el=>el.classList.toggle('active', el.dataset.id===id));
+  renderInspector();
+}
+function updateField(id, key, val){
+  const n = findNode(id); if(!n) return;
+  n[key] = val;
+  refreshCard(id);
+  if(key==='name') $('#biName').textContent = val || labelOf(n.kind);
+}
+function addStep(parentId, index, kind){
+  let list;
+  if(parentId==='root') list = curScript.steps;
+  else { const p = findNode(parentId); p.children = p.children || []; list = p.children; }
+  const n = defaultNode(kind);
+  list.splice(index, 0, n);
+  closePalette();
+  renderBuilder();
+  selectStep(n.id);
+}
+function deleteStep(id){
+  removeNode(id);
+  if(selB===id) selB = null;
+  renderBuilder();
+  renderInspector();
+}
+
+/* ---- step palette popover ---- */
+function openPalette(e, parentId, index){
+  e.stopPropagation();
+  const p = $('#stepPalette');
+  p.innerHTML = PALETTE.map(g=>
+    `<div class="pal-label">${g.grp}</div>` + g.kinds.map(k=>{ const m=BKIND[k];
+      return `<div class="pal-item" role="menuitem" onclick="addStep('${parentId}',${index},'${k}')">
+        <div class="pal-ic ${m.tint}"><i data-lucide="${m.ic}"></i></div>
+        <div class="pal-main"><b>${labelOf(k)}</b><small>${m.desc}</small></div></div>`;
+    }).join('')).join('');
+  p.classList.add('open');
+  lucide.createIcons();
+  const r = e.currentTarget.getBoundingClientRect();
+  const pw = p.offsetWidth, ph = p.offsetHeight;
+  let left = r.right + 8, top = r.top - 6;
+  if(left + pw > window.innerWidth - 12) left = r.left - pw - 8;
+  if(left < 12) left = 12;
+  if(top + ph > window.innerHeight - 12) top = window.innerHeight - ph - 12;
+  if(top < 12) top = 12;
+  p.style.left = left + 'px'; p.style.top = top + 'px';
+}
+function closePalette(){ $('#stepPalette').classList.remove('open'); }
+document.addEventListener('click', e=>{
+  const p = $('#stepPalette');
+  if(p.classList.contains('open') && !p.contains(e.target) && !e.target.closest('.badd')) closePalette();
+});
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closePalette(); });
+
+window.openScript = openScript; window.selectStep = selectStep; window.updateField = updateField;
+window.addStep = addStep; window.deleteStep = deleteStep; window.openPalette = openPalette;
 
 /* expose go() for inline onclick */
 window.go = go;
