@@ -744,6 +744,51 @@ textarea.input { resize: vertical; min-height: 96px; line-height: 1.6; }
 .modal-body { padding: var(--sp-5); overflow-y: auto; flex: 1; min-height: 0; }
 .modal-foot { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-4) var(--sp-5); border-top: 1px solid var(--border); background: var(--surface-2); flex: none; }
 .modal-foot .spacer { flex: 1; }
+
+/* ============================================================
+   USERS — workspace member management (CRUD)
+   ============================================================ */
+/* table avatar (reuses gradient tiles) */
+.av {
+  width: 32px; height: 32px; border-radius: 99px; flex: none;
+  display: grid; place-items: center; color: #fff; font-weight: 600; font-size: 12.5px;
+}
+.user-cell { display: flex; align-items: center; gap: var(--sp-3); }
+.user-cell .um { min-width: 0; }
+.user-cell .um .nm { display: flex; align-items: center; gap: 7px; }
+.you-chip {
+  font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--primary); background: var(--primary-soft); border: 1px solid var(--primary-ring);
+  border-radius: 99px; padding: 1px 6px;
+}
+.user-cell .um small { font-size: 11.5px; color: var(--text-3); }
+
+/* role pill — admin uses the brand/primary tone, user is neutral */
+.pill.admin { color: var(--primary); background: var(--primary-soft); border-color: var(--primary-ring); }
+.pill.admin .dot { background: var(--primary); }
+
+/* row action buttons revealed on hover */
+.row-acts { display: inline-flex; align-items: center; gap: 2px; opacity: 0; transition: opacity .12s; }
+tbody tr:hover .row-acts { opacity: 1; }
+.row-acts .icon-btn.xs { width: 30px; height: 30px; background: transparent; border-color: transparent; }
+.row-acts .icon-btn.xs:hover { background: var(--surface-3); }
+.row-acts .icon-btn.xs.danger { color: var(--err); }
+.row-acts .icon-btn.xs.danger:hover { background: var(--err-soft); }
+
+/* role segmented control inside the editor modal */
+.role-seg { display: flex; width: 100%; }
+.role-seg button { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
+.role-seg button svg { width: 15px; height: 15px; }
+.role-seg button.active svg { color: var(--primary); }
+.role-help { font-size: 11.5px; color: var(--text-3); margin-top: 8px; display: flex; align-items: flex-start; gap: 6px; line-height: 1.5; }
+.role-help svg { width: 14px; height: 14px; flex: none; margin-top: 1px; color: var(--primary); }
+
+/* round avatar preview in modal (reuses dropzone thumb) */
+.dz-thumb.round { border-radius: 99px; }
+
+/* error alert variant (form-level lockout guards) */
+.alert.err { background: var(--err-soft); color: var(--err); border: 1px solid color-mix(in srgb,var(--err) 26%,transparent); }
+.alert.err b { color: var(--text); }
 </style>
 </head>
 <body>
@@ -771,6 +816,7 @@ textarea.input { resize: vertical; min-height: 96px; line-height: 1.6; }
       </div>
       <div class="nav-group">
         <div class="nav-label">System</div>
+        <div class="nav-item" data-view="users"><i data-lucide="users"></i> Users <span class="badge-count" id="navUserCount">5</span></div>
         <div class="nav-item" data-view="settings"><i data-lucide="settings"></i> Settings</div>
       </div>
     </nav>
@@ -1162,6 +1208,22 @@ textarea.input { resize: vertical; min-height: 96px; line-height: 1.6; }
       </div></div>
     </section>
 
+    <!-- ===================== USERS ===================== -->
+    <section class="view" id="view-users">
+      <div class="scroll"><div class="pad" style="max-width:960px">
+        <div class="page-head"><div class="t"><h2>Users</h2><p>People with access to this workspace and the role that governs what they can do.</p></div>
+          <div class="actions"><button class="btn primary" onclick="openUser(-1)"><i data-lucide="user-plus"></i> Add user</button></div></div>
+        <div class="alert warn"><i data-lucide="shield"></i><div><b>Admins</b>manage users, vendors, scripts and settings. <b style="display:inline">Users</b> can create and run orders, but can't change workspace configuration.</div></div>
+        <div class="card table-wrap">
+          <table>
+            <thead><tr><th>User</th><th>Role</th><th>Status</th><th>Last active</th><th style="text-align:right">Actions</th></tr></thead>
+            <tbody id="userRows"></tbody>
+          </table>
+        </div>
+        <p class="hint" style="margin-top:16px"><i data-lucide="info"></i> At least one Admin must remain at all times — the last Admin can't be removed or demoted.</p>
+      </div></div>
+    </section>
+
     <!-- ===================== VENDOR DETAIL ===================== -->
     <section class="view" id="view-vendor-detail">
       <!-- header -->
@@ -1350,6 +1412,87 @@ textarea.input { resize: vertical; min-height: 96px; line-height: 1.6; }
   </div>
 </div>
 
+<!-- ===================== USER EDITOR MODAL ===================== -->
+<div class="modal-scrim" id="userModal" role="dialog" aria-modal="true" aria-labelledby="umTitle">
+  <div class="modal" style="width:min(480px,100%)">
+    <div class="modal-head">
+      <span class="mh-ic tint-indigo" id="umHeadIcon"><i data-lucide="user-plus"></i></span>
+      <div><h3 id="umTitle">Add user</h3><div class="sub" id="umSub">Invite someone to this workspace</div></div>
+      <button class="icon-btn" title="Close" aria-label="Close" onclick="closeUser()"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="alert err" id="umErr" role="alert" aria-live="polite" style="display:none"><i data-lucide="alert-triangle"></i><div id="umErrMsg"></div></div>
+
+      <div class="fld">
+        <label>Avatar</label>
+        <div class="dropzone">
+          <div class="dz-thumb round grad-indigo" id="umThumb"><span>?</span></div>
+          <div class="dz-main">
+            <b>Profile photo</b>
+            <p>Optional · PNG or JPG up to 1 MB · falls back to initials</p>
+            <div class="dz-actions">
+              <button class="btn sm" type="button"><i data-lucide="upload"></i> Upload</button>
+              <button class="btn sm ghost" type="button"><i data-lucide="trash-2"></i> Remove</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fld">
+        <label for="umName">Full name <span class="req">*</span></label>
+        <input class="input" id="umName" placeholder="e.g. Marta Kovács" autocomplete="name" oninput="syncUserThumb()" />
+      </div>
+
+      <div class="fld">
+        <label for="umEmail">Email <span class="req">*</span></label>
+        <input class="input mono" id="umEmail" type="email" autocomplete="email" placeholder="name@vinosoft.com" />
+        <span class="help"><i data-lucide="mail"></i> Sign-in identity and where the invitation is sent</span>
+      </div>
+
+      <div class="fld">
+        <label>Role <span class="req">*</span></label>
+        <div class="seg role-seg" id="umRole" role="radiogroup" aria-label="Role">
+          <button type="button" data-role="admin" role="radio" aria-checked="false" onclick="setUserRole('admin')"><i data-lucide="shield"></i> Admin</button>
+          <button type="button" data-role="user" role="radio" aria-checked="true" onclick="setUserRole('user')"><i data-lucide="user"></i> User</button>
+        </div>
+        <div class="role-help" id="umRoleHelp"><i data-lucide="info"></i> <span></span></div>
+      </div>
+
+      <div class="fld" style="margin-bottom:0">
+        <label for="umStatus">Status</label>
+        <select class="input" id="umStatus">
+          <option value="invited">Invited — invitation sent, not yet accepted</option>
+          <option value="active">Active — can sign in</option>
+          <option value="disabled">Disabled — access revoked</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn danger" id="umDelete" onclick="askDeleteUser()"><i data-lucide="trash-2"></i> Remove</button>
+      <span class="spacer"></span>
+      <button class="btn ghost" onclick="closeUser()">Cancel</button>
+      <button class="btn primary" onclick="saveUser()"><i data-lucide="check"></i> <span id="umSaveLabel">Send invite</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== CONFIRM (destructive) DIALOG ===================== -->
+<div class="modal-scrim" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="cfTitle">
+  <div class="modal" style="width:min(420px,100%)">
+    <div class="modal-head">
+      <span class="mh-ic" style="background:var(--err-soft);color:var(--err)"><i data-lucide="alert-triangle"></i></span>
+      <div><h3 id="cfTitle">Remove user</h3></div>
+      <button class="icon-btn" title="Close" aria-label="Close" onclick="closeConfirm()"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body"><p id="cfMsg" style="color:var(--text-2);line-height:1.6"></p></div>
+    <div class="modal-foot">
+      <span class="spacer"></span>
+      <button class="btn ghost" onclick="closeConfirm()">Cancel</button>
+      <button class="btn primary" id="cfConfirm" style="background:var(--err);border-color:var(--err)"><i data-lucide="trash-2"></i> Remove user</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===================== STEP PALETTE (builder add-step popover) ===================== -->
 <div class="palette" id="stepPalette" role="menu" aria-label="Add step"></div>
 
@@ -1527,7 +1670,8 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
 /* ============ sidebar nav / views ============ */
 const CRUMB = {
   dashboard:['Dashboard'], scripts:['Scripts'], orders:['Orders'],
-  parameters:['Parameters'], vendors:['Vendors'], credentials:['Credentials'], settings:['Settings']
+  parameters:['Parameters'], vendors:['Vendors'], credentials:['Credentials'],
+  users:['Users'], settings:['Settings']
 };
 /* breadcrumb parts per view — last entry is the current (bold) page */
 function crumbParts(view){
@@ -2037,6 +2181,155 @@ $('#credRows').innerHTML = CREDS.map(c=>`<tr>
   <td>${c[1]}</td><td class="cell-mut">${c[2]}</td><td class="cell-mut mono">${c[3]}</td></tr>`).join('');
 
 /* ============================================================
+   USERS — workspace members & roles (full CRUD)
+   ============================================================ */
+let USERS = [
+  { id:'u1', name:'Yehor Androsov', email:'yehor.androsov@sparkdynamic.com', role:'admin', status:'active',   last:'Just now',    grad:'grad-indigo', you:true },
+  { id:'u2', name:'Marta Kovács',   email:'marta.kovacs@vinosoft.com',       role:'admin', status:'active',   last:'2 hours ago', grad:'grad-pink' },
+  { id:'u3', name:'Daniel Brooks',  email:'daniel.brooks@vinosoft.com',      role:'user',  status:'active',   last:'Yesterday',   grad:'grad-green' },
+  { id:'u4', name:'Priya Nair',     email:'priya.nair@vinosoft.com',         role:'user',  status:'invited',  last:'—',           grad:'grad-amber' },
+  { id:'u5', name:'Tomáš Horák',    email:'tomas.horak@vinosoft.com',        role:'user',  status:'disabled', last:'Mar 18',      grad:'grad-cyan' },
+];
+let curUser = -1, pendingDelete = null, _ucnt = 5;
+
+const ROLE_PILL   = { admin:['admin','shield','Admin'], user:['idle','user','User'] };
+const USTAT_PILL  = { active:['ok','check-circle-2','Active'], invited:['warn','mail','Invited'], disabled:['idle','ban','Disabled'] };
+const ROLE_DESC   = {
+  admin:'Full access — manage users, vendors, scripts, credentials and settings.',
+  user:'Can create and run orders, but can\'t change workspace configuration.',
+};
+const initials = n => (n||'?').trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase() || '?';
+const adminCount = () => USERS.filter(u=>u.role==='admin').length;
+
+function renderUsers(){
+  $('#userRows').innerHTML = USERS.map(u=>{
+    const [rc,ri,rl] = ROLE_PILL[u.role];
+    const [sc,si,sl] = USTAT_PILL[u.status];
+    return `<tr onclick="openUser('${u.id}')">
+      <td>
+        <div class="user-cell">
+          <div class="av ${u.grad}">${initials(u.name)}</div>
+          <div class="um">
+            <div class="nm"><span class="cell-strong">${tx(u.name)}</span>${u.you?'<span class="you-chip">You</span>':''}</div>
+            <small class="mono">${tx(u.email)}</small>
+          </div>
+        </div>
+      </td>
+      <td><span class="pill ${rc}">${u.role==='admin'?`<i data-lucide="${ri}"></i>`:'<span class="dot"></span>'} ${rl}</span></td>
+      <td><span class="pill ${sc}">${sc==='idle'?'<span class="dot"></span>':`<i data-lucide="${si}"></i>`} ${sl}</span></td>
+      <td class="cell-mut mono">${u.last}</td>
+      <td style="text-align:right">
+        <span class="row-acts">
+          <button class="icon-btn xs" title="Edit user" aria-label="Edit ${tx(u.name)}" onclick="event.stopPropagation();openUser('${u.id}')"><i data-lucide="pencil"></i></button>
+          <button class="icon-btn xs danger" title="Remove user" aria-label="Remove ${tx(u.name)}" onclick="event.stopPropagation();askDeleteUser('${u.id}')"><i data-lucide="trash-2"></i></button>
+        </span>
+      </td></tr>`;
+  }).join('');
+  $('#navUserCount').textContent = USERS.length;
+  lucide.createIcons();
+}
+
+function showUserErr(msg){ $('#umErrMsg').textContent = msg; $('#umErr').style.display = msg?'flex':'none'; lucide.createIcons(); }
+function setUserRole(role){
+  $('#umRole').dataset.role = role;
+  document.querySelectorAll('#umRole button').forEach(b=>{
+    const on = b.dataset.role===role;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-checked', String(on));
+  });
+  $('#umRoleHelp').querySelector('span').textContent = ROLE_DESC[role];
+}
+function syncUserThumb(){
+  const u = curUser>=0 ? USERS.find(x=>x.id===curUser) : null;
+  $('#umThumb').className = 'dz-thumb round ' + (u?u.grad:'grad-indigo');
+  $('#umThumb').innerHTML = `<span>${initials($('#umName').value)}</span>`;
+}
+
+function openUser(id){
+  showUserErr('');
+  const isNew = id===-1 || id===undefined;
+  curUser = isNew ? -1 : id;
+  const u = isNew
+    ? { name:'', email:'', role:'user', status:'invited', grad:'grad-indigo' }
+    : USERS.find(x=>x.id===id);
+  $('#umTitle').textContent = isNew ? 'Add user' : (u.you ? 'Edit your profile' : 'Edit user');
+  $('#umSub').textContent   = isNew ? 'Invite someone to this workspace' : tx(u.email);
+  $('#umHeadIcon').innerHTML = `<i data-lucide="${isNew?'user-plus':'user-cog'}"></i>`;
+  $('#umName').value  = u.name;
+  $('#umEmail').value = u.email;
+  setUserRole(u.role);
+  $('#umStatus').value = u.status;
+  $('#umSaveLabel').textContent = isNew ? 'Send invite' : 'Save changes';
+  $('#umDelete').style.display = isNew ? 'none' : '';
+  syncUserThumb();
+  $('#userModal').classList.add('open');
+  lucide.createIcons();
+  setTimeout(()=>$('#umName').focus(),50);
+}
+function closeUser(){ $('#userModal').classList.remove('open'); }
+
+function saveUser(){
+  const name = $('#umName').value.trim();
+  const email = $('#umEmail').value.trim();
+  const role = $('#umRole').dataset.role;
+  const status = $('#umStatus').value;
+  if(!name){ showUserErr('Enter a full name.'); $('#umName').focus(); return; }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ showUserErr('Enter a valid email address.'); $('#umEmail').focus(); return; }
+  // duplicate email guard
+  const dupe = USERS.find(u=>u.email.toLowerCase()===email.toLowerCase() && u.id!==curUser);
+  if(dupe){ showUserErr('Another user already uses that email address.'); $('#umEmail').focus(); return; }
+
+  if(curUser>=0 || typeof curUser==='string'){
+    const u = USERS.find(x=>x.id===curUser);
+    // lockout guard: don't demote the last admin
+    if(u.role==='admin' && role!=='admin' && adminCount()===1){
+      showUserErr('This is the only Admin. Promote another user to Admin before changing this role.');
+      setUserRole('admin'); return;
+    }
+    Object.assign(u, { name, email, role, status, last:u.last });
+  } else {
+    const grads = ['grad-indigo','grad-green','grad-amber','grad-pink','grad-cyan'];
+    USERS.push({ id:'u'+(++_ucnt), name, email, role, status, last:'—', grad:grads[USERS.length%5] });
+  }
+  closeUser();
+  renderUsers();
+}
+
+/* delete with confirmation + last-admin / self guards */
+function askDeleteUser(id){
+  const targetId = id || curUser;
+  const u = USERS.find(x=>x.id===targetId);
+  if(!u) return;
+  if(u.you){ if(curUser!==-1){ showUserErr('You can\'t remove your own account.'); } else { alert('You can\'t remove your own account.'); } return; }
+  if(u.role==='admin' && adminCount()===1){
+    const m = 'This is the only Admin — promote another user before removing them.';
+    if(curUser!==-1) showUserErr(m); else alert(m);
+    return;
+  }
+  pendingDelete = targetId;
+  $('#cfMsg').innerHTML = `Remove <b>${tx(u.name)}</b> (${tx(u.email)})? They'll lose access immediately. This can't be undone.`;
+  $('#confirmModal').classList.add('open');
+  lucide.createIcons();
+}
+function closeConfirm(){ $('#confirmModal').classList.remove('open'); pendingDelete=null; }
+$('#cfConfirm').onclick = ()=>{
+  if(pendingDelete){
+    USERS = USERS.filter(u=>u.id!==pendingDelete);
+    renderUsers();
+  }
+  closeConfirm();
+  closeUser();
+};
+
+$('#userModal').onclick = e => { if(e.target.id==='userModal') closeUser(); };
+$('#confirmModal').onclick = e => { if(e.target.id==='confirmModal') closeConfirm(); };
+document.addEventListener('keydown', e => { if(e.key==='Escape'){ closeUser(); closeConfirm(); } });
+
+window.openUser=openUser; window.closeUser=closeUser; window.saveUser=saveUser;
+window.setUserRole=setUserRole; window.syncUserThumb=syncUserThumb;
+window.askDeleteUser=askDeleteUser; window.closeConfirm=closeConfirm;
+
+/* ============================================================
    SCRIPT BUILDER — visual step editor (mirrors the WPF DSL)
    ============================================================ */
 let curScript = null, selB = null;
@@ -2321,6 +2614,7 @@ curOrder = OMAP['1042'];
 renderSteps();
 select(9);
 applyZoom();
+renderUsers();
 go('orders');
 lucide.createIcons();
 </script>
