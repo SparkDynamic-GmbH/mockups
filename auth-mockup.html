@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Procurement Flow — Sign in</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+/* ============================================================
+   DESIGN TOKENS  (shared with portal-mockup.html)
+   ============================================================ */
+:root {
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --r-sm: 6px; --r-md: 9px; --r-lg: 14px; --r-xl: 20px;
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 24px; --sp-6: 32px;
+
+  --z-base: 0; --z-sticky: 20; --z-overlay: 40; --z-modal: 100; --z-toast: 1000;
+  --ease: cubic-bezier(.2,.7,.2,1);
+}
+
+/* DARK (default) ------------------------------------------------ */
+[data-theme="dark"] {
+  --bg:        #0b0e14;
+  --bg-1:      #11151f;
+  --surface:   #161b27;
+  --surface-2: #1c2230;
+  --surface-3: #232b3b;
+  --border:    #283142;
+  --border-2:  #313c52;
+
+  --text:      #e8ecf4;
+  --text-2:    #aeb8cc;
+  --text-3:    #6e7a92;
+
+  --primary:      #6d8bff;
+  --primary-strong:#5575ff;
+  --primary-soft: rgba(109,139,255,.14);
+  --primary-ring: rgba(109,139,255,.40);
+
+  --ok:    #3fcf8e; --ok-soft:   rgba(63,207,142,.14);
+  --warn:  #f5b544; --warn-soft: rgba(245,181,68,.15);
+  --err:   #ff6b6b; --err-soft:  rgba(255,107,107,.14);
+  --run:   #58b2ff; --run-soft:  rgba(88,178,255,.15);
+  --idle:  #6e7a92; --idle-soft: rgba(110,122,146,.14);
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.4);
+  --shadow-md: 0 6px 20px rgba(0,0,0,.45);
+  --shadow-lg: 0 18px 50px rgba(0,0,0,.55);
+  --scrim: rgba(4,6,12,.66);
+}
+
+/* LIGHT --------------------------------------------------------- */
+[data-theme="light"] {
+  --bg:        #f4f6fb;
+  --bg-1:      #eef1f8;
+  --surface:   #ffffff;
+  --surface-2: #f7f9fd;
+  --surface-3: #eef2f9;
+  --border:    #e2e8f2;
+  --border-2:  #d4dcea;
+
+  --text:      #131722;
+  --text-2:    #4c5772;
+  --text-3:    #8290aa;
+
+  --primary:      #3f5bd9;
+  --primary-strong:#2f49c4;
+  --primary-soft: rgba(63,91,217,.10);
+  --primary-ring: rgba(63,91,217,.35);
+
+  --ok:    #14935f; --ok-soft:   rgba(20,147,95,.12);
+  --warn:  #b9791b; --warn-soft: rgba(214,148,38,.16);
+  --err:   #d63b46; --err-soft:  rgba(214,59,70,.10);
+  --run:   #1f7fd6; --run-soft:  rgba(31,127,214,.12);
+  --idle:  #8290aa; --idle-soft: rgba(130,144,170,.14);
+
+  --shadow-sm: 0 1px 2px rgba(20,30,60,.06);
+  --shadow-md: 0 8px 24px rgba(20,30,60,.10);
+  --shadow-lg: 0 20px 50px rgba(20,30,60,.16);
+  --scrim: rgba(20,28,48,.42);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+::selection { background: var(--primary-ring); }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+svg.lucide { width: 18px; height: 18px; stroke-width: 2; flex: none; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* ============================================================
+   SPLIT LAYOUT
+   ============================================================ */
+.auth { display: grid; grid-template-columns: 1.05fr 1fr; min-height: 100dvh; }
+
+/* ---- Left brand / marketing panel ---- */
+.aside {
+  position: relative; overflow: hidden;
+  background:
+    radial-gradient(110% 80% at 85% -10%, color-mix(in srgb, var(--primary) 22%, transparent), transparent 60%),
+    radial-gradient(90% 70% at -10% 110%, color-mix(in srgb, var(--primary) 14%, transparent), transparent 55%),
+    var(--bg-1);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  padding: var(--sp-6) clamp(32px, 5vw, 64px);
+}
+.aside::after {
+  /* faint blueprint grid */
+  content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .5;
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--border) 60%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--border) 60%, transparent) 1px, transparent 1px);
+  background-size: 40px 40px;
+  -webkit-mask-image: radial-gradient(80% 60% at 30% 40%, #000, transparent 75%);
+          mask-image: radial-gradient(80% 60% at 30% 40%, #000, transparent 75%);
+}
+.aside > * { position: relative; z-index: 1; }
+
+.brand { display: flex; align-items: center; gap: var(--sp-3); }
+.brand .logo {
+  width: 38px; height: 38px; border-radius: 11px; flex: none;
+  background: linear-gradient(135deg, var(--primary), var(--primary-strong));
+  display: grid; place-items: center; color: #fff; box-shadow: var(--shadow-md);
+}
+.brand .logo svg { width: 22px; height: 22px; stroke: #fff; }
+.brand h1 { font-size: 16px; font-weight: 700; letter-spacing: -.2px; }
+.brand span { display: block; font-size: 11.5px; color: var(--text-3); font-weight: 500; }
+
+.aside-mid { margin-top: auto; margin-bottom: auto; max-width: 460px; }
+.aside-mid h2 {
+  font-size: clamp(26px, 3vw, 34px); font-weight: 700; letter-spacing: -.6px; line-height: 1.18;
+}
+.aside-mid h2 em { color: var(--primary); font-style: normal; }
+.aside-mid p { color: var(--text-2); font-size: 15px; margin-top: var(--sp-4); line-height: 1.6; }
+
+.feature-list { margin-top: var(--sp-6); display: grid; gap: var(--sp-4); }
+.feature { display: flex; align-items: flex-start; gap: var(--sp-3); }
+.feature .fic {
+  width: 34px; height: 34px; border-radius: 9px; flex: none; display: grid; place-items: center;
+  background: var(--primary-soft); color: var(--primary); border: 1px solid var(--primary-ring);
+}
+.feature .fic svg { width: 17px; height: 17px; }
+.feature b { font-size: 13.5px; font-weight: 600; display: block; }
+.feature p { font-size: 12.5px; color: var(--text-3); margin-top: 2px; }
+
+.aside-foot { display: flex; align-items: center; gap: var(--sp-2); color: var(--text-3); font-size: 12px; }
+.aside-foot svg { width: 14px; height: 14px; color: var(--ok); }
+
+/* ---- Right form panel ---- */
+.panel { display: flex; flex-direction: column; padding: var(--sp-5) clamp(20px, 4vw, 56px); position: relative; }
+.panel-top { display: flex; align-items: center; gap: var(--sp-3); height: 40px; }
+.panel-top .spacer { flex: 1; }
+.muted-link { color: var(--text-3); font-size: 13px; font-weight: 500; text-decoration: none; }
+.muted-link b { color: var(--primary); font-weight: 600; }
+.muted-link:hover b { color: var(--primary-strong); }
+
+.icon-btn {
+  width: 36px; height: 36px; border-radius: var(--r-md); flex: none;
+  display: grid; place-items: center; cursor: pointer;
+  background: var(--surface); border: 1px solid var(--border); color: var(--text-2);
+  transition: background .15s, color .15s, border-color .15s;
+}
+.icon-btn:hover { background: var(--surface-2); color: var(--text); border-color: var(--border-2); }
+.icon-btn svg { width: 17px; height: 17px; }
+
+.panel-mid { flex: 1; display: grid; place-items: center; }
+.formwrap { width: 100%; max-width: 392px; }
+
+/* ---- Screens ---- */
+.screen { display: none; animation: rise .35s var(--ease) both; }
+.screen.active { display: block; }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+.head { margin-bottom: var(--sp-5); }
+.head .eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--primary); }
+.head h3 { font-size: 25px; font-weight: 700; letter-spacing: -.5px; margin-top: 8px; }
+.head p { color: var(--text-3); font-size: 13.5px; margin-top: 8px; line-height: 1.55; }
+.head p b { color: var(--text-2); font-weight: 600; }
+
+/* big status glyph for confirmation screens */
+.glyph {
+  width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center; margin-bottom: var(--sp-5);
+  background: var(--primary-soft); color: var(--primary); border: 1px solid var(--primary-ring);
+}
+.glyph.ok { background: var(--ok-soft); color: var(--ok); border-color: color-mix(in srgb, var(--ok) 30%, transparent); }
+.glyph svg { width: 27px; height: 27px; }
+
+/* ---- Form primitives (from portal) ---- */
+.field { margin-bottom: var(--sp-4); }
+.field > label { display: flex; align-items: center; font-size: 12px; font-weight: 600; color: var(--text-2); margin-bottom: 7px; letter-spacing: .01em; }
+.field > label .req { color: var(--err); margin-left: 3px; }
+.field > label .opt { margin-left: auto; color: var(--text-3); font-weight: 500; }
+.field > label a { margin-left: auto; color: var(--primary); font-size: 12px; font-weight: 600; text-decoration: none; }
+.field > label a:hover { color: var(--primary-strong); }
+
+.inputwrap { position: relative; display: flex; align-items: center; }
+.inputwrap > .lead { position: absolute; left: 12px; color: var(--text-3); pointer-events: none; display: grid; place-items: center; }
+.inputwrap > .lead svg { width: 16px; height: 16px; }
+.input {
+  width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md);
+  padding: 11px 12px; color: var(--text); font-family: var(--font-sans); font-size: 14px; outline: none;
+  transition: border-color .15s, box-shadow .15s, background .15s;
+}
+.inputwrap > .lead ~ .input { padding-left: 38px; }
+.input::placeholder { color: var(--text-3); }
+.input:focus { border-color: var(--primary-ring); box-shadow: 0 0 0 3px var(--primary-soft); }
+.input.has-trail { padding-right: 42px; }
+.input.mono { font-family: var(--font-mono); letter-spacing: .04em; }
+.field.error .input { border-color: var(--err); box-shadow: 0 0 0 3px var(--err-soft); }
+.field.ok .input { border-color: color-mix(in srgb, var(--ok) 55%, transparent); }
+
+.trail-btn {
+  position: absolute; right: 6px; width: 30px; height: 30px; border: none; background: none;
+  color: var(--text-3); display: grid; place-items: center; border-radius: 7px; cursor: pointer;
+}
+.trail-btn:hover { color: var(--text); background: var(--surface-2); }
+.trail-btn svg { width: 17px; height: 17px; }
+
+.msg { font-size: 12px; margin-top: 7px; display: flex; align-items: center; gap: 5px; line-height: 1.4; }
+.msg svg { width: 13px; height: 13px; flex: none; }
+.msg.err { color: var(--err); }
+.msg.ok { color: var(--ok); }
+.help { font-size: 12px; color: var(--text-3); margin-top: 7px; line-height: 1.5; }
+
+/* remember row */
+.between { display: flex; align-items: center; justify-content: space-between; margin: 2px 0 var(--sp-5); }
+.check { display: inline-flex; align-items: center; gap: var(--sp-2); cursor: pointer; user-select: none; }
+.check input { position: absolute; opacity: 0; width: 0; height: 0; }
+.check .box {
+  width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid var(--border-2); background: var(--surface);
+  display: grid; place-items: center; color: #fff; transition: background .15s, border-color .15s;
+}
+.check .box svg { width: 12px; height: 12px; opacity: 0; stroke-width: 3; }
+.check input:checked + .box { background: var(--primary); border-color: var(--primary-strong); }
+.check input:checked + .box svg { opacity: 1; }
+.check input:focus-visible + .box { box-shadow: 0 0 0 3px var(--primary-soft); }
+.check span { font-size: 13px; color: var(--text-2); }
+.link { color: var(--primary); font-size: 13px; font-weight: 600; text-decoration: none; }
+.link:hover { color: var(--primary-strong); }
+
+/* buttons (from portal) */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-2);
+  font-family: var(--font-sans); font-size: 14px; font-weight: 600;
+  padding: 11px 16px; border-radius: var(--r-md); cursor: pointer;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text);
+  transition: background .15s, border-color .15s, transform .06s, box-shadow .15s;
+  white-space: nowrap;
+}
+.btn:hover { background: var(--surface-2); border-color: var(--border-2); }
+.btn:active { transform: translateY(1px); }
+.btn svg { width: 17px; height: 17px; }
+.btn.primary { background: var(--primary); border-color: var(--primary-strong); color: #fff; box-shadow: var(--shadow-sm); }
+.btn.primary:hover { background: var(--primary-strong); }
+.btn.ghost { background: transparent; border-color: transparent; color: var(--text-2); }
+.btn.ghost:hover { background: var(--surface-2); color: var(--text); }
+.btn.block { width: 100%; }
+.btn.lg { padding: 12px 18px; }
+
+.btn-row { display: flex; gap: var(--sp-3); }
+.btn-row .btn { flex: 1; }
+
+/* divider with label */
+.or { display: flex; align-items: center; gap: var(--sp-3); margin: var(--sp-5) 0; color: var(--text-3); font-size: 12px; font-weight: 500; }
+.or::before, .or::after { content: ''; height: 1px; flex: 1; background: var(--border); }
+
+/* SSO buttons */
+.sso { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
+.sso .btn { font-size: 13px; }
+.sso .btn svg { width: 18px; height: 18px; }
+
+/* OTP inputs */
+.otp { display: flex; gap: var(--sp-2); margin-bottom: var(--sp-4); }
+.otp input {
+  flex: 1 1 0; min-width: 0; width: 0; height: 56px; text-align: center; font-family: var(--font-mono); font-size: 22px; font-weight: 600;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); color: var(--text); outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.otp input:focus { border-color: var(--primary-ring); box-shadow: 0 0 0 3px var(--primary-soft); }
+.otp input.filled { border-color: var(--primary-ring); background: var(--surface-2); }
+
+/* resend / footer line */
+.foot-line { text-align: center; font-size: 13px; color: var(--text-3); margin-top: var(--sp-5); }
+.foot-line a { color: var(--primary); font-weight: 600; text-decoration: none; }
+.foot-line a:hover { color: var(--primary-strong); }
+.back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--text-2); font-size: 13px; font-weight: 600; text-decoration: none; margin-top: var(--sp-5); }
+.back-link svg { width: 15px; height: 15px; }
+.back-link:hover { color: var(--text); }
+
+/* recipient chip on check-email screen */
+.recipient {
+  display: inline-flex; align-items: center; gap: var(--sp-2); font-size: 13px; font-weight: 600;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 99px; padding: 6px 14px 6px 10px;
+  color: var(--text); margin-bottom: var(--sp-4);
+}
+.recipient svg { width: 15px; height: 15px; color: var(--text-3); }
+
+/* password strength meter */
+.meter { display: flex; gap: 5px; margin-top: 9px; }
+.meter i { height: 4px; flex: 1; border-radius: 99px; background: var(--surface-3); transition: background .2s; }
+.meter.s1 i:nth-child(1){ background: var(--err); }
+.meter.s2 i:nth-child(-n+2){ background: var(--warn); }
+.meter.s3 i:nth-child(-n+3){ background: var(--warn); }
+.meter.s4 i { background: var(--ok); }
+.meter-label { font-size: 11.5px; color: var(--text-3); margin-top: 6px; }
+
+/* requirements list */
+.reqs { margin-top: var(--sp-3); display: grid; gap: 6px; }
+.reqs li { list-style: none; display: flex; align-items: center; gap: var(--sp-2); font-size: 12px; color: var(--text-3); }
+.reqs li svg { width: 14px; height: 14px; color: var(--text-3); }
+.reqs li.met { color: var(--text-2); }
+.reqs li.met svg { color: var(--ok); }
+
+/* info alert (from portal) */
+.alert { display: flex; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); border-radius: var(--r-md); font-size: 12.5px; line-height: 1.5; margin-bottom: var(--sp-4); }
+.alert svg { width: 18px; height: 18px; flex: none; margin-top: 1px; }
+.alert.warn { background: var(--warn-soft); color: var(--warn); border: 1px solid color-mix(in srgb,var(--warn) 30%,transparent); }
+.alert.info { background: var(--primary-soft); color: var(--primary); border: 1px solid var(--primary-ring); }
+.alert b { display: block; color: var(--text); margin-bottom: 2px; }
+
+.panel-foot { display: flex; align-items: center; gap: var(--sp-4); color: var(--text-3); font-size: 12px; flex-wrap: wrap; }
+.panel-foot a { color: var(--text-3); text-decoration: none; }
+.panel-foot a:hover { color: var(--text-2); }
+.panel-foot .dotsep { width: 3px; height: 3px; border-radius: 99px; background: var(--text-3); opacity: .5; }
+
+/* ---- flow nav (mockup aid, not part of product) ---- */
+.flownav {
+  position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: var(--z-toast);
+  display: flex; align-items: center; gap: 4px; padding: 5px; border-radius: 99px;
+  background: var(--surface); border: 1px solid var(--border-2); box-shadow: var(--shadow-lg);
+}
+.flownav span { font-size: 10.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); padding: 0 8px 0 10px; }
+.flownav button {
+  border: none; background: none; color: var(--text-2); font-family: var(--font-sans); font-weight: 600; font-size: 12px;
+  padding: 6px 11px; border-radius: 99px; cursor: pointer; transition: background .15s, color .15s;
+}
+.flownav button:hover { background: var(--surface-2); color: var(--text); }
+.flownav button.active { background: var(--primary); color: #fff; }
+
+/* ---- Responsive ---- */
+@media (max-width: 880px) {
+  .auth { grid-template-columns: 1fr; }
+  .aside { display: none; }
+  .panel { min-height: 100dvh; }
+}
+</style>
+</head>
+<body>
+<div class="auth">
+  <!-- ============== LEFT: BRAND PANEL ============== -->
+  <aside class="aside">
+    <div class="brand">
+      <div class="logo"><i data-lucide="workflow"></i></div>
+      <div>
+        <h1>Procurement Flow</h1>
+        <span>Cloudwawi</span>
+      </div>
+    </div>
+
+    <div class="aside-mid">
+      <h2>Automate software<br>procurement, <em>end&nbsp;to&nbsp;end.</em></h2>
+      <p>Sign in to drive vendor checkouts, capture license keys, and resume holds — all from one operator console.</p>
+
+      <div class="feature-list">
+        <div class="feature">
+          <div class="fic"><i data-lucide="git-branch"></i></div>
+          <div><b>Reusable purchase flows</b><p>Versioned automations across every vendor site.</p></div>
+        </div>
+        <div class="feature">
+          <div class="fic"><i data-lucide="shield-check"></i></div>
+          <div><b>Secrets stay in the vault</b><p>Payment details resolve locally — never stored in the cloud.</p></div>
+        </div>
+        <div class="feature">
+          <div class="fic"><i data-lucide="hand"></i></div>
+          <div><b>Human-in-the-loop</b><p>Step in only when a CAPTCHA or review needs you.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="aside-foot">
+      <i data-lucide="lock"></i>
+      <span>SOC 2 Type II · End-to-end encrypted · Windows desktop agent</span>
+    </div>
+  </aside>
+
+  <!-- ============== RIGHT: FORM PANEL ============== -->
+  <div class="panel">
+    <div class="panel-top">
+      <a class="muted-link" href="#" id="topAux" data-show="signin">New here? <b>Request access</b></a>
+      <span class="spacer"></span>
+      <button class="icon-btn" id="themeBtn" title="Toggle theme"><i data-lucide="moon"></i></button>
+    </div>
+
+    <div class="panel-mid">
+      <div class="formwrap">
+
+        <!-- =============== SIGN IN =============== -->
+        <section class="screen active" id="screen-signin">
+          <div class="head">
+            <h3>Welcome back</h3>
+            <p>Sign in to your procurement workspace.</p>
+          </div>
+
+          <div class="sso">
+            <button class="btn"><i data-lucide="chrome"></i> Google</button>
+            <button class="btn"><i data-lucide="square"></i> Microsoft</button>
+          </div>
+          <div class="or">or continue with email</div>
+
+          <form onsubmit="return false">
+            <div class="field">
+              <label for="li-email">Email</label>
+              <div class="inputwrap">
+                <span class="lead"><i data-lucide="mail"></i></span>
+                <input class="input" id="li-email" type="email" inputmode="email" autocomplete="username"
+                       placeholder="you@company.com" value="yehor.androsov@sparkdynamic.com" />
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="li-pass">Password <a href="#" data-show="forgot">Forgot password?</a></label>
+              <div class="inputwrap">
+                <span class="lead"><i data-lucide="lock"></i></span>
+                <input class="input has-trail" id="li-pass" type="password" autocomplete="current-password" placeholder="Enter your password" value="superSecret123" />
+                <button type="button" class="trail-btn" data-toggle="li-pass" title="Show password"><i data-lucide="eye"></i></button>
+              </div>
+            </div>
+
+            <div class="between">
+              <label class="check">
+                <input type="checkbox" checked />
+                <span class="box"><i data-lucide="check"></i></span>
+                <span>Keep me signed in</span>
+              </label>
+            </div>
+
+            <button class="btn primary block lg" data-show="twofa"><i data-lucide="arrow-right"></i> Sign in</button>
+          </form>
+
+          <p class="foot-line">Don't have access yet? <a href="#">Request an invite</a></p>
+        </section>
+
+        <!-- =============== 2FA =============== -->
+        <section class="screen" id="screen-twofa">
+          <div class="head">
+            <div class="glyph"><i data-lucide="shield-check"></i></div>
+            <h3>Two-factor authentication</h3>
+            <p>Enter the 6-digit code from your authenticator app to finish signing in.</p>
+          </div>
+
+          <form onsubmit="return false">
+            <div class="field">
+              <label>Verification code</label>
+              <div class="otp" id="otp">
+                <input class="filled" inputmode="numeric" maxlength="1" value="4" aria-label="Digit 1" />
+                <input class="filled" inputmode="numeric" maxlength="1" value="8" aria-label="Digit 2" />
+                <input class="filled" inputmode="numeric" maxlength="1" value="2" aria-label="Digit 3" />
+                <input inputmode="numeric" maxlength="1" value="" aria-label="Digit 4" />
+                <input inputmode="numeric" maxlength="1" value="" aria-label="Digit 5" />
+                <input inputmode="numeric" maxlength="1" value="" aria-label="Digit 6" />
+              </div>
+              <p class="help">Lost your device? Use a <a class="link" href="#">backup code</a> instead.</p>
+            </div>
+
+            <button class="btn primary block lg" data-show="success"><i data-lucide="check"></i> Verify &amp; continue</button>
+          </form>
+
+          <p class="foot-line">Didn't get a code? <a href="#">Resend in 0:28</a></p>
+          <a class="back-link" href="#" data-show="signin"><i data-lucide="arrow-left"></i> Back to sign in</a>
+        </section>
+
+        <!-- =============== FORGOT PASSWORD =============== -->
+        <section class="screen" id="screen-forgot">
+          <div class="head">
+            <div class="glyph"><i data-lucide="key-round"></i></div>
+            <h3>Forgot your password?</h3>
+            <p>Enter the email tied to your workspace and we'll send a secure link to reset it.</p>
+          </div>
+
+          <form onsubmit="return false">
+            <div class="field">
+              <label for="fp-email">Email</label>
+              <div class="inputwrap">
+                <span class="lead"><i data-lucide="mail"></i></span>
+                <input class="input" id="fp-email" type="email" inputmode="email" autocomplete="username"
+                       placeholder="you@company.com" value="yehor.androsov@sparkdynamic.com" />
+              </div>
+              <p class="help">We'll only send a link if this email matches an active account.</p>
+            </div>
+
+            <button class="btn primary block lg" data-show="check"><i data-lucide="send"></i> Send reset link</button>
+          </form>
+
+          <a class="back-link" href="#" data-show="signin"><i data-lucide="arrow-left"></i> Back to sign in</a>
+        </section>
+
+        <!-- =============== CHECK EMAIL =============== -->
+        <section class="screen" id="screen-check">
+          <div class="head">
+            <div class="glyph"><i data-lucide="mail-check"></i></div>
+            <h3>Check your inbox</h3>
+            <p>If an account exists, we've sent a reset link to:</p>
+          </div>
+
+          <div class="recipient"><i data-lucide="mail"></i> yehor.androsov@sparkdynamic.com</div>
+
+          <div class="alert info">
+            <i data-lucide="clock"></i>
+            <div><b>The link expires in 30 minutes</b>For your security, it can only be used once. Didn't see it? Check spam or promotions.</div>
+          </div>
+
+          <!-- demo shortcut: simulates clicking the email link -->
+          <button class="btn primary block lg" data-show="reset"><i data-lucide="external-link"></i> Open reset link</button>
+
+          <p class="foot-line">Didn't get an email? <a href="#" data-show="forgot">Resend</a> or <a href="#">try another address</a></p>
+          <a class="back-link" href="#" data-show="signin"><i data-lucide="arrow-left"></i> Back to sign in</a>
+        </section>
+
+        <!-- =============== RESET PASSWORD =============== -->
+        <section class="screen" id="screen-reset">
+          <div class="head">
+            <div class="glyph"><i data-lucide="lock-keyhole"></i></div>
+            <h3>Set a new password</h3>
+            <p>Resetting password for <b>yehor.androsov@sparkdynamic.com</b>. Choose something you haven't used before.</p>
+          </div>
+
+          <form onsubmit="return false">
+            <div class="field" id="rp-field">
+              <label for="rp-pass">New password</label>
+              <div class="inputwrap">
+                <span class="lead"><i data-lucide="lock"></i></span>
+                <input class="input has-trail" id="rp-pass" type="password" autocomplete="new-password" placeholder="Create a password" value="Vinosoft-2026!" />
+                <button type="button" class="trail-btn" data-toggle="rp-pass" title="Show password"><i data-lucide="eye"></i></button>
+              </div>
+              <div class="meter s4"><i></i><i></i><i></i><i></i></div>
+              <ul class="reqs">
+                <li class="met"><i data-lucide="check-circle-2"></i> At least 12 characters</li>
+                <li class="met"><i data-lucide="check-circle-2"></i> Upper &amp; lowercase letters</li>
+                <li class="met"><i data-lucide="check-circle-2"></i> A number and a symbol</li>
+              </ul>
+            </div>
+
+            <div class="field" style="margin-top:var(--sp-5)">
+              <label for="rp-confirm">Confirm password</label>
+              <div class="inputwrap">
+                <span class="lead"><i data-lucide="lock"></i></span>
+                <input class="input has-trail" id="rp-confirm" type="password" autocomplete="new-password" placeholder="Re-enter your password" value="Vinosoft-2026!" />
+                <button type="button" class="trail-btn" data-toggle="rp-confirm" title="Show password"><i data-lucide="eye"></i></button>
+              </div>
+              <p class="msg ok"><i data-lucide="check"></i> Passwords match</p>
+            </div>
+
+            <button class="btn primary block lg" data-show="success"><i data-lucide="check"></i> Reset password</button>
+          </form>
+        </section>
+
+        <!-- =============== SUCCESS =============== -->
+        <section class="screen" id="screen-success">
+          <div class="head">
+            <div class="glyph ok"><i data-lucide="check-circle-2"></i></div>
+            <h3>You're all set</h3>
+            <p>Your password has been updated and you're securely signed in. Let's get back to work.</p>
+          </div>
+
+          <button class="btn primary block lg" onclick="window.location.href='portal-mockup.html'"><i data-lucide="layout-dashboard"></i> Go to dashboard</button>
+          <a class="back-link" href="#" data-show="signin"><i data-lucide="arrow-left"></i> Back to sign in</a>
+        </section>
+
+      </div>
+    </div>
+
+    <div class="panel-foot">
+      <span>© 2026 Cloudwawi</span>
+      <span class="dotsep"></span>
+      <a href="#">Privacy</a>
+      <span class="dotsep"></span>
+      <a href="#">Terms</a>
+      <span class="dotsep"></span>
+      <a href="#">Support</a>
+    </div>
+  </div>
+</div>
+
+<!-- mockup-only flow switcher -->
+<div class="flownav">
+  <span>Flow</span>
+  <button data-show="signin" class="active">Sign in</button>
+  <button data-show="twofa">2FA</button>
+  <button data-show="forgot">Forgot</button>
+  <button data-show="check">Check email</button>
+  <button data-show="reset">Reset</button>
+  <button data-show="success">Done</button>
+</div>
+
+<script>
+/* ---- screen routing ---- */
+const screens = {
+  signin:  document.getElementById('screen-signin'),
+  twofa:   document.getElementById('screen-twofa'),
+  forgot:  document.getElementById('screen-forgot'),
+  check:   document.getElementById('screen-check'),
+  reset:   document.getElementById('screen-reset'),
+  success: document.getElementById('screen-success'),
+};
+const navBtns = document.querySelectorAll('.flownav button');
+const topAux  = document.getElementById('topAux');
+
+function show(name){
+  Object.values(screens).forEach(s => s.classList.remove('active'));
+  (screens[name] || screens.signin).classList.add('active');
+  navBtns.forEach(b => b.classList.toggle('active', b.dataset.show === name));
+  // top-right aux link adapts to context
+  if (name === 'signin') topAux.innerHTML = "New here? <b>Request access</b>";
+  else topAux.innerHTML = '<b>&larr; Back to sign in</b>';
+  topAux.dataset.show = name === 'signin' ? 'signin' : 'signin';
+  window.scrollTo(0,0);
+}
+
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('[data-show]');
+  if (!t) return;
+  e.preventDefault();
+  show(t.dataset.show);
+});
+
+/* ---- password show / hide ---- */
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-toggle]');
+  if (!btn) return;
+  const input = document.getElementById(btn.dataset.toggle);
+  const showing = input.type === 'text';
+  input.type = showing ? 'password' : 'text';
+  btn.innerHTML = showing ? '<i data-lucide="eye"></i>' : '<i data-lucide="eye-off"></i>';
+  btn.title = showing ? 'Show password' : 'Hide password';
+  lucide.createIcons();
+});
+
+/* ---- OTP: advance focus + fill styling ---- */
+const otp = document.getElementById('otp');
+if (otp){
+  const cells = [...otp.querySelectorAll('input')];
+  cells.forEach((c, i) => {
+    c.addEventListener('input', () => {
+      c.value = c.value.replace(/\D/g,'').slice(0,1);
+      c.classList.toggle('filled', !!c.value);
+      if (c.value && cells[i+1]) cells[i+1].focus();
+    });
+    c.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace' && !c.value && cells[i-1]) cells[i-1].focus();
+    });
+  });
+}
+
+/* ---- theme toggle ---- */
+const root = document.documentElement;
+const themeBtn = document.getElementById('themeBtn');
+themeBtn.addEventListener('click', () => {
+  const dark = root.getAttribute('data-theme') === 'dark';
+  root.setAttribute('data-theme', dark ? 'light' : 'dark');
+  themeBtn.innerHTML = dark ? '<i data-lucide="sun"></i>' : '<i data-lucide="moon"></i>';
+  lucide.createIcons();
+});
+
+lucide.createIcons();
+</script>
+</body>
+</html>

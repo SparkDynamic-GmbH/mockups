@@ -1,0 +1,1798 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Procurement Flow — Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+/* ============================================================
+   DESIGN TOKENS
+   ============================================================ */
+:root {
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --r-sm: 6px; --r-md: 9px; --r-lg: 14px; --r-xl: 20px;
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 24px; --sp-6: 32px;
+
+  --z-base: 0; --z-sticky: 20; --z-overlay: 40; --z-modal: 100; --z-toast: 1000;
+  --ease: cubic-bezier(.2,.7,.2,1);
+}
+
+/* DARK (default) ------------------------------------------------ */
+[data-theme="dark"] {
+  --bg:        #0b0e14;
+  --bg-1:      #11151f;
+  --surface:   #161b27;
+  --surface-2: #1c2230;
+  --surface-3: #232b3b;
+  --border:    #283142;
+  --border-2:  #313c52;
+
+  --text:      #e8ecf4;
+  --text-2:    #aeb8cc;
+  --text-3:    #6e7a92;
+
+  --primary:      #6d8bff;
+  --primary-strong:#5575ff;
+  --primary-soft: rgba(109,139,255,.14);
+  --primary-ring: rgba(109,139,255,.40);
+
+  --ok:    #3fcf8e; --ok-soft:   rgba(63,207,142,.14);
+  --warn:  #f5b544; --warn-soft: rgba(245,181,68,.15);
+  --err:   #ff6b6b; --err-soft:  rgba(255,107,107,.14);
+  --run:   #58b2ff; --run-soft:  rgba(88,178,255,.15);
+  --idle:  #6e7a92; --idle-soft: rgba(110,122,146,.14);
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.4);
+  --shadow-md: 0 6px 20px rgba(0,0,0,.45);
+  --shadow-lg: 0 18px 50px rgba(0,0,0,.55);
+  --scrim: rgba(4,6,12,.66);
+  --screenshot-bg: #0e1119;
+}
+
+/* LIGHT --------------------------------------------------------- */
+[data-theme="light"] {
+  --bg:        #f4f6fb;
+  --bg-1:      #eef1f8;
+  --surface:   #ffffff;
+  --surface-2: #f7f9fd;
+  --surface-3: #eef2f9;
+  --border:    #e2e8f2;
+  --border-2:  #d4dcea;
+
+  --text:      #131722;
+  --text-2:    #4c5772;
+  --text-3:    #8290aa;
+
+  --primary:      #3f5bd9;
+  --primary-strong:#2f49c4;
+  --primary-soft: rgba(63,91,217,.10);
+  --primary-ring: rgba(63,91,217,.35);
+
+  --ok:    #14935f; --ok-soft:   rgba(20,147,95,.12);
+  --warn:  #b9791b; --warn-soft: rgba(214,148,38,.16);
+  --err:   #d63b46; --err-soft:  rgba(214,59,70,.10);
+  --run:   #1f7fd6; --run-soft:  rgba(31,127,214,.12);
+  --idle:  #8290aa; --idle-soft: rgba(130,144,170,.14);
+
+  --shadow-sm: 0 1px 2px rgba(20,30,60,.06);
+  --shadow-md: 0 8px 24px rgba(20,30,60,.10);
+  --shadow-lg: 0 20px 50px rgba(20,30,60,.16);
+  --scrim: rgba(20,28,48,.42);
+  --screenshot-bg: #f0f3f9;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+::selection { background: var(--primary-ring); }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.num  { font-variant-numeric: tabular-nums; }
+
+/* scrollbars */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 99px; border: 2px solid transparent; background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-3); background-clip: content-box; }
+::-webkit-scrollbar-track { background: transparent; }
+
+svg.lucide { width: 18px; height: 18px; stroke-width: 2; flex: none; }
+
+/* ============================================================
+   APP SHELL
+   ============================================================ */
+.app { display: grid; grid-template-columns: 248px 1fr; height: 100vh; }
+
+/* ---- Sidebar ---- */
+.sidebar {
+  background: var(--bg-1);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  min-height: 0;
+}
+.brand {
+  display: flex; align-items: center; gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-4) var(--sp-4) var(--sp-5);
+  height: 60px; flex: none;
+}
+.brand .logo {
+  width: 32px; height: 32px; border-radius: 9px; flex: none;
+  background: linear-gradient(135deg, var(--primary), var(--primary-strong));
+  display: grid; place-items: center; color: #fff; box-shadow: var(--shadow-sm);
+}
+.brand .logo svg { width: 19px; height: 19px; stroke: #fff; }
+.brand h1 { font-size: 14.5px; font-weight: 700; letter-spacing: -.2px; }
+.brand span { display: block; font-size: 11px; color: var(--text-3); font-weight: 500; }
+
+.nav { padding: var(--sp-2) var(--sp-3); overflow-y: auto; flex: 1; min-height: 0; }
+.nav-group { margin-top: var(--sp-4); }
+.nav-group:first-child { margin-top: var(--sp-1); }
+.nav-label {
+  font-size: 10.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--text-3); padding: 0 var(--sp-3) var(--sp-2);
+}
+.nav-item {
+  display: flex; align-items: center; gap: var(--sp-3);
+  padding: 9px var(--sp-3); border-radius: var(--r-md);
+  color: var(--text-2); font-weight: 500; cursor: pointer;
+  border: 1px solid transparent;
+  transition: background .15s var(--ease), color .15s var(--ease);
+  position: relative; user-select: none;
+}
+.nav-item svg { width: 18px; height: 18px; color: var(--text-3); transition: color .15s; }
+.nav-item:hover { background: var(--surface-2); color: var(--text); }
+.nav-item:hover svg { color: var(--text-2); }
+.nav-item.active { background: var(--primary-soft); color: var(--primary); border-color: var(--primary-ring); }
+.nav-item.active svg { color: var(--primary); }
+.nav-item .badge-count {
+  margin-left: auto; font-size: 11px; font-weight: 600;
+  background: var(--surface-3); color: var(--text-2);
+  padding: 1px 7px; border-radius: 99px; min-width: 20px; text-align: center;
+}
+.nav-item.active .badge-count { background: var(--primary); color: #fff; }
+
+.sidebar-foot { border-top: 1px solid var(--border); padding: var(--sp-3); flex: none; }
+.user {
+  display: flex; align-items: center; gap: var(--sp-3);
+  padding: var(--sp-2); border-radius: var(--r-md); cursor: pointer;
+}
+.user:hover { background: var(--surface-2); }
+.avatar {
+  width: 30px; height: 30px; border-radius: 99px; flex: none;
+  background: linear-gradient(135deg,#8a6dff,#6d8bff);
+  display: grid; place-items: center; color: #fff; font-weight: 600; font-size: 12px;
+}
+.user .meta { min-width: 0; }
+.user .meta b { font-size: 12.5px; font-weight: 600; display: block; }
+.user .meta small { font-size: 11px; color: var(--text-3); }
+
+/* ---- Main ---- */
+.main { display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--bg); }
+
+.topbar {
+  height: 60px; flex: none; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: var(--sp-4);
+  padding: 0 var(--sp-5); background: var(--bg);
+}
+.crumbs { display: flex; align-items: center; gap: var(--sp-2); color: var(--text-3); font-size: 13px; font-weight: 500; min-width: 0; }
+.crumbs b { color: var(--text); font-weight: 600; }
+.crumbs svg { width: 15px; height: 15px; }
+.search {
+  margin-left: auto; display: flex; align-items: center; gap: var(--sp-2);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-md); padding: 7px var(--sp-3); width: 280px; color: var(--text-3);
+  transition: border-color .15s, box-shadow .15s;
+}
+.search:focus-within { border-color: var(--primary-ring); box-shadow: 0 0 0 3px var(--primary-soft); }
+.search svg { width: 16px; height: 16px; }
+.search input { background: none; border: none; outline: none; color: var(--text); font-family: var(--font-sans); font-size: 13px; width: 100%; }
+.search kbd {
+  font-family: var(--font-mono); font-size: 10px; color: var(--text-3);
+  border: 1px solid var(--border-2); border-radius: 4px; padding: 1px 5px; background: var(--surface-2);
+}
+.icon-btn {
+  width: 36px; height: 36px; border-radius: var(--r-md); flex: none;
+  display: grid; place-items: center; cursor: pointer;
+  background: var(--surface); border: 1px solid var(--border); color: var(--text-2);
+  transition: background .15s, color .15s, border-color .15s;
+}
+.icon-btn:hover { background: var(--surface-2); color: var(--text); border-color: var(--border-2); }
+.icon-btn svg { width: 17px; height: 17px; }
+
+.view { flex: 1; min-height: 0; overflow: hidden; display: none; }
+.view.active { display: flex; flex-direction: column; }
+.scroll { overflow-y: auto; flex: 1; min-height: 0; }
+.pad { padding: var(--sp-5); }
+
+/* ============================================================
+   GENERIC UI
+   ============================================================ */
+.btn {
+  display: inline-flex; align-items: center; gap: var(--sp-2);
+  font-family: var(--font-sans); font-size: 13px; font-weight: 600;
+  padding: 8px 14px; border-radius: var(--r-md); cursor: pointer;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text);
+  transition: background .15s, border-color .15s, transform .06s, box-shadow .15s;
+  white-space: nowrap;
+}
+.btn:hover { background: var(--surface-2); border-color: var(--border-2); }
+.btn:active { transform: translateY(1px); }
+.btn svg { width: 16px; height: 16px; }
+.btn.primary { background: var(--primary); border-color: var(--primary-strong); color: #fff; box-shadow: var(--shadow-sm); }
+.btn.primary:hover { background: var(--primary-strong); }
+.btn.ghost { background: transparent; border-color: transparent; color: var(--text-2); }
+.btn.ghost:hover { background: var(--surface-2); color: var(--text); }
+.btn.danger { color: var(--err); border-color: transparent; background: transparent; }
+.btn.danger:hover { background: var(--err-soft); }
+.btn.sm { padding: 5px 10px; font-size: 12px; }
+
+.page-head { display: flex; align-items: flex-start; gap: var(--sp-4); margin-bottom: var(--sp-5); }
+.page-head .t h2 { font-size: 21px; font-weight: 700; letter-spacing: -.4px; }
+.page-head .t p { color: var(--text-3); font-size: 13px; margin-top: 3px; }
+.page-head .actions { margin-left: auto; display: flex; gap: var(--sp-2); }
+
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); box-shadow: var(--shadow-sm);
+}
+
+/* status pill */
+.pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11.5px; font-weight: 600; padding: 3px 9px 3px 7px; border-radius: 99px;
+  border: 1px solid transparent; white-space: nowrap; line-height: 1.4;
+}
+.pill svg { width: 13px; height: 13px; }
+.pill .dot { width: 7px; height: 7px; border-radius: 99px; }
+.pill.ok   { color: var(--ok);   background: var(--ok-soft);   border-color: color-mix(in srgb, var(--ok) 26%, transparent); }
+.pill.warn { color: var(--warn); background: var(--warn-soft); border-color: color-mix(in srgb, var(--warn) 30%, transparent); }
+.pill.err  { color: var(--err);  background: var(--err-soft);  border-color: color-mix(in srgb, var(--err) 26%, transparent); }
+.pill.run  { color: var(--run);  background: var(--run-soft);  border-color: color-mix(in srgb, var(--run) 30%, transparent); }
+.pill.idle { color: var(--text-3); background: var(--idle-soft); border-color: var(--border-2); }
+.pill.ok .dot{background:var(--ok)} .pill.warn .dot{background:var(--warn)} .pill.err .dot{background:var(--err)} .pill.idle .dot{background:var(--idle)}
+.dot.pulse { box-shadow: 0 0 0 0 var(--run); animation: pulse 1.6s infinite; }
+@keyframes pulse { 0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--run) 60%,transparent)} 70%{box-shadow:0 0 0 6px transparent} 100%{box-shadow:0 0 0 0 transparent} }
+
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* stat cards */
+.stat-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: var(--sp-4); margin-bottom: var(--sp-5); }
+.stat { padding: var(--sp-4) var(--sp-5); }
+.stat .label { display: flex; align-items: center; gap: 7px; color: var(--text-3); font-size: 12px; font-weight: 500; }
+.stat .label svg { width: 15px; height: 15px; }
+.stat .v { font-size: 27px; font-weight: 700; letter-spacing: -.5px; margin-top: 10px; }
+.stat .sub { font-size: 12px; margin-top: 4px; color: var(--text-3); display:flex; align-items:center; gap:4px;}
+.trend-up { color: var(--ok); } .trend-down { color: var(--err); }
+.trend-up svg, .trend-down svg { width: 13px; height: 13px; }
+
+/* tables */
+.table-wrap { overflow: hidden; }
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  text-align: left; font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--text-3); padding: 11px var(--sp-4); background: var(--surface-2);
+  border-bottom: 1px solid var(--border); position: sticky; top: 0; cursor: pointer; user-select: none; white-space: nowrap;
+}
+thead th .sa { display:inline-flex; vertical-align:-2px; margin-left:4px; opacity:.5; }
+thead th .sa svg { width: 12px; height: 12px; }
+tbody td { padding: 13px var(--sp-4); border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+tbody tr { cursor: pointer; transition: background .12s; }
+tbody tr:hover { background: var(--surface-2); }
+tbody tr:last-child td { border-bottom: none; }
+.cell-strong { font-weight: 600; color: var(--text); }
+.cell-mut { color: var(--text-3); }
+.id-chip { font-family: var(--font-mono); font-size: 12px; color: var(--text-2); background: var(--surface-2); padding: 2px 7px; border-radius: 5px; border: 1px solid var(--border); }
+.flow-cell { display: flex; align-items: center; gap: var(--sp-3); }
+.flow-ic { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; flex: none; }
+.flow-ic svg { width: 16px; height: 16px; }
+.tint-indigo{background:var(--primary-soft);color:var(--primary)}
+.tint-green{background:var(--ok-soft);color:var(--ok)}
+.tint-amber{background:var(--warn-soft);color:var(--warn)}
+.tint-pink{background:rgba(220,120,255,.14);color:#c98bff}
+
+.toolbar { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-3) var(--sp-4); border-bottom: 1px solid var(--border); }
+.seg { display: inline-flex; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-md); padding: 2px; }
+.seg button { border: none; background: none; color: var(--text-3); font-family: var(--font-sans); font-weight: 600; font-size: 12.5px; padding: 5px 12px; border-radius: 7px; cursor: pointer; }
+.seg button.active { background: var(--surface); color: var(--text); box-shadow: var(--shadow-sm); }
+
+/* ============================================================
+   EXECUTION DETAIL — the centerpiece (3 panes)
+   ============================================================ */
+.exec-head {
+  flex: none; border-bottom: 1px solid var(--border); padding: var(--sp-4) var(--sp-5);
+  display: flex; align-items: center; gap: var(--sp-4); background: var(--bg);
+}
+.exec-head .back { flex: none; }
+.exec-title { min-width: 0; }
+.exec-title .row1 { display: flex; align-items: center; gap: var(--sp-3); }
+.exec-title h2 { font-size: 16px; font-weight: 700; letter-spacing: -.2px; white-space: nowrap; }
+.exec-title .row2 { display: flex; align-items: center; gap: var(--sp-3); margin-top: 4px; color: var(--text-3); font-size: 12px; }
+.exec-title .row2 .sep { width: 3px; height: 3px; border-radius: 99px; background: var(--text-3); opacity: .5; }
+.exec-actions { margin-left: auto; display: flex; align-items: center; gap: var(--sp-2); }
+
+.exec-progress { flex: none; padding: var(--sp-3) var(--sp-5); border-bottom: 1px solid var(--border); display:flex; align-items:center; gap: var(--sp-4); background: var(--bg-1); }
+.progress-track { flex: 1; height: 6px; border-radius: 99px; background: var(--surface-3); overflow: hidden; display: flex; }
+.progress-track i { height: 100%; display: block; }
+.progress-track i.ok { background: var(--ok); } .progress-track i.run { background: var(--run); } .progress-track i.idle { background: transparent; }
+.progress-meta { font-size: 12px; color: var(--text-2); font-weight: 500; white-space: nowrap; }
+
+.exec-body { flex: 1; min-height: 0; display: grid; grid-template-columns: 320px 1fr 360px; }
+
+/* -- left: step timeline -- */
+.steps-pane { border-right: 1px solid var(--border); display: flex; flex-direction: column; min-height: 0; background: var(--bg-1); }
+.pane-head { flex: none; padding: 12px var(--sp-4); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: var(--sp-2); }
+.pane-head h3 { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); }
+.pane-head .count { margin-left: auto; font-size: 11px; color: var(--text-3); font-family: var(--font-mono); }
+.steps-list { overflow-y: auto; flex: 1; min-height: 0; padding: var(--sp-3); }
+
+.step {
+  display: grid; grid-template-columns: 24px 1fr auto; align-items: start; gap: var(--sp-3);
+  padding: 10px var(--sp-3); border-radius: var(--r-md); cursor: pointer; position: relative;
+  border: 1px solid transparent; transition: background .12s, border-color .12s;
+}
+.step:hover { background: var(--surface); }
+.step.active { background: var(--surface); border-color: var(--primary-ring); box-shadow: var(--shadow-sm); }
+.step.active::before { content:''; position:absolute; left:0; top:8px; bottom:8px; width:3px; border-radius:99px; background: var(--primary); }
+.step-rail { display: grid; place-items: center; position: relative; }
+.step-node {
+  width: 22px; height: 22px; border-radius: 99px; display: grid; place-items: center; flex: none;
+  border: 2px solid var(--border-2); background: var(--surface); color: var(--text-3); z-index: 1;
+}
+.step-node svg { width: 12px; height: 12px; }
+.step:not(:last-child) .step-rail::after { content:''; position:absolute; top:22px; bottom:-14px; width:2px; background: var(--border); }
+.step.s-ok   .step-node { border-color: var(--ok);  background: var(--ok);  color: #fff; }
+.step.s-ok:not(:last-child) .step-rail::after { background: var(--ok); }
+.step.s-run  .step-node { border-color: var(--run); background: var(--run-soft); color: var(--run); }
+.step.s-warn .step-node { border-color: var(--warn);background: var(--warn);color: #1a1205; }
+.step.s-err  .step-node { border-color: var(--err); background: var(--err); color: #fff; }
+.step.s-idle .step-node { border-style: dashed; }
+.step .s-main { min-width: 0; }
+.step .s-type { font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--text-3); }
+.step.active .s-type { color: var(--primary); }
+.step .s-name { font-size: 13px; font-weight: 600; color: var(--text); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.step .s-sub { font-size: 11.5px; color: var(--text-3); font-family: var(--font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+.step .s-time { font-size: 11px; color: var(--text-3); font-family: var(--font-mono); padding-top: 2px; }
+.step .s-cam { color: var(--primary); }
+.step .s-cam svg { width: 13px; height: 13px; }
+
+/* -- center: screenshot stage -- */
+.stage { display: flex; flex-direction: column; min-width: 0; min-height: 0; background:
+  radial-gradient(120% 80% at 50% 0%, color-mix(in srgb, var(--primary) 6%, transparent), transparent 60%), var(--screenshot-bg); }
+.stage-bar { flex: none; display: flex; align-items: center; gap: var(--sp-3); padding: 10px var(--sp-4); border-bottom: 1px solid var(--border); background: var(--bg); }
+.stage-bar .url {
+  flex: 1; display: flex; align-items: center; gap: var(--sp-2); min-width: 0;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: 99px; padding: 6px var(--sp-3);
+  font-family: var(--font-mono); font-size: 12px; color: var(--text-2);
+}
+.stage-bar .url svg { width: 13px; height: 13px; color: var(--ok); }
+.stage-bar .url span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.zoom { display: inline-flex; align-items: center; gap: 2px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-md); padding: 2px; }
+.zoom button { width: 28px; height: 26px; display: grid; place-items: center; border: none; background: none; color: var(--text-2); border-radius: 6px; cursor: pointer; }
+.zoom button:hover { background: var(--surface); color: var(--text); }
+.zoom .lvl { font-size: 11.5px; font-family: var(--font-mono); color: var(--text-3); padding: 0 6px; min-width: 42px; text-align: center; }
+
+.stage-scroll { flex: 1; min-height: 0; overflow: auto; display: grid; place-items: center; padding: var(--sp-5); }
+.shot {
+  position: relative; border-radius: var(--r-lg); overflow: hidden;
+  box-shadow: var(--shadow-lg); border: 1px solid var(--border-2);
+  background: #fff; max-width: 100%;
+  transition: transform .2s var(--ease);
+}
+.shot .chrome {
+  height: 30px; background: #e9edf4; display: flex; align-items: center; gap: 6px; padding: 0 12px; border-bottom: 1px solid #d7deea;
+}
+.shot .chrome i { width: 9px; height: 9px; border-radius: 99px; display: block; }
+.shot .chrome .addr { margin-left: 10px; height: 16px; background: #fff; border: 1px solid #d7deea; border-radius: 99px; flex: 1; max-width: 260px; }
+.shot img, .shot svg.page { display: block; width: 760px; max-width: 100%; height: auto; }
+/* annotation pin on the shot */
+.annot {
+  position: absolute; z-index: 3;
+  transform: translate(-50%,-50%);
+}
+.annot .pin {
+  width: 30px; height: 30px; border-radius: 50% 50% 50% 2px; transform: rotate(45deg);
+  background: var(--primary); box-shadow: 0 4px 14px rgba(0,0,0,.4); display: grid; place-items: center;
+  border: 2px solid #fff;
+}
+.annot .pin span { transform: rotate(-45deg); color: #fff; font-weight: 700; font-size: 12px; font-family: var(--font-mono); }
+.annot .halo { position: absolute; inset: -10px; border-radius: 99px; border: 2px solid var(--primary); opacity: .5; animation: halo 1.8s infinite; }
+@keyframes halo { 0%{transform:scale(.7);opacity:.6} 100%{transform:scale(1.8);opacity:0} }
+.target-box {
+  position: absolute; z-index: 2; border: 2px dashed var(--primary); border-radius: 8px;
+  background: var(--primary-soft); box-shadow: 0 0 0 4000px rgba(8,10,18,.30);
+}
+.stage-foot { flex: none; display: flex; align-items: center; gap: var(--sp-3); padding: 10px var(--sp-4); border-top: 1px solid var(--border); background: var(--bg); font-size: 12px; color: var(--text-3); }
+.stage-foot .spacer { flex: 1; }
+
+/* -- right: inspector -- */
+.inspector { border-left: 1px solid var(--border); display: flex; flex-direction: column; min-height: 0; background: var(--bg-1); }
+.insp-head { flex: none; padding: var(--sp-4); border-bottom: 1px solid var(--border); }
+.insp-head .k { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--primary); }
+.insp-head h3 { font-size: 15px; font-weight: 700; margin-top: 4px; }
+.insp-head .meta { display: flex; align-items: center; gap: var(--sp-2); margin-top: 8px; flex-wrap: wrap; }
+.tabs { flex: none; display: flex; gap: 2px; padding: 0 var(--sp-3); border-bottom: 1px solid var(--border); }
+.tab { padding: 11px var(--sp-3); font-size: 12.5px; font-weight: 600; color: var(--text-3); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color .12s; }
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+.insp-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: var(--sp-4); }
+.tabpane { display: none; } .tabpane.active { display: block; }
+
+.field { margin-bottom: var(--sp-4); }
+.field > label { display: block; font-size: 11px; font-weight: 600; color: var(--text-3); margin-bottom: 5px; letter-spacing: .02em; }
+.kv { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: 9px 11px; font-family: var(--font-mono); font-size: 12.5px; color: var(--text); word-break: break-all; }
+.kv.copy { display: flex; align-items: center; gap: var(--sp-2); justify-content: space-between; }
+.kv.copy svg { width: 14px; height: 14px; color: var(--text-3); cursor: pointer; flex: none; }
+.kv.copy svg:hover { color: var(--primary); }
+
+.dl { display: grid; grid-template-columns: 96px 1fr; gap: 9px 12px; }
+.dl dt { color: var(--text-3); font-size: 12px; }
+.dl dd { font-size: 12.5px; font-weight: 500; }
+
+.log { background: var(--screenshot-bg); border: 1px solid var(--border); border-radius: var(--r-md); padding: var(--sp-3); font-family: var(--font-mono); font-size: 12px; line-height: 1.7; overflow-x: auto; }
+.log .ln { display: flex; gap: var(--sp-3); white-space: pre; }
+.log .ts { color: var(--text-3); flex: none; }
+.log .lv { font-weight: 600; flex: none; width: 44px; }
+.log .lv.i { color: var(--run); } .log .lv.w { color: var(--warn); } .log .lv.e { color: var(--err); } .log .lv.ok { color: var(--ok); }
+.log .msg { color: var(--text-2); white-space: pre-wrap; }
+
+.alert { display: flex; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); border-radius: var(--r-md); font-size: 12.5px; line-height: 1.5; margin-bottom: var(--sp-4); }
+.alert svg { width: 18px; height: 18px; flex: none; margin-top: 1px; }
+.alert.warn { background: var(--warn-soft); color: var(--warn); border: 1px solid color-mix(in srgb,var(--warn) 30%,transparent); }
+.alert b { display: block; color: var(--text); margin-bottom: 2px; }
+.alert.warn .acts { margin-top: 10px; display: flex; gap: var(--sp-2); }
+
+/* code block (CustomCode / extracted) */
+.code { background: var(--screenshot-bg); border: 1px solid var(--border); border-radius: var(--r-md); padding: var(--sp-3); font-family: var(--font-mono); font-size: 12px; line-height: 1.6; color: var(--text-2); overflow-x: auto; white-space: pre; }
+.code .key { color: var(--primary); } .code .str { color: var(--ok); } .code .num2 { color: var(--warn); }
+
+/* forms (parameters / settings) */
+.form-grid { display: grid; grid-template-columns: 220px 1fr; gap: var(--sp-5) var(--sp-6); }
+.form-grid .lab b { font-size: 13.5px; font-weight: 600; display: block; }
+.form-grid .lab p { font-size: 12px; color: var(--text-3); margin-top: 3px; }
+.input { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: 9px 12px; color: var(--text); font-family: var(--font-sans); font-size: 13px; outline: none; transition: border-color .15s, box-shadow .15s; }
+.input:focus { border-color: var(--primary-ring); box-shadow: 0 0 0 3px var(--primary-soft); }
+.input.mono { font-family: var(--font-mono); }
+.row-inputs { display: flex; gap: var(--sp-3); }
+.hint { font-size: 11.5px; color: var(--text-3); margin-top: 6px; display: flex; align-items: center; gap: 5px; }
+.hint svg { width: 13px; height: 13px; }
+.divider { height: 1px; background: var(--border); margin: var(--sp-5) 0; }
+
+.switch { position: relative; width: 40px; height: 23px; flex: none; }
+.switch input { display: none; }
+.switch .track { position: absolute; inset: 0; background: var(--surface-3); border: 1px solid var(--border-2); border-radius: 99px; transition: background .18s; cursor: pointer; }
+.switch .track::after { content:''; position: absolute; top: 2px; left: 2px; width: 17px; height: 17px; border-radius: 99px; background: #fff; box-shadow: var(--shadow-sm); transition: transform .18s var(--ease); }
+.switch input:checked + .track { background: var(--primary); border-color: var(--primary-strong); }
+.switch input:checked + .track::after { transform: translateX(17px); }
+
+.param-tag { display:inline-flex; align-items:center; gap:6px; font-family: var(--font-mono); font-size: 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; color: var(--text-2); }
+.param-tag b { color: var(--primary); font-weight: 600; }
+
+.flow-card-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(310px,1fr)); gap: var(--sp-4); }
+.flow-card { padding: var(--sp-4); display: flex; flex-direction: column; gap: var(--sp-3); cursor: pointer; transition: border-color .15s, transform .08s, box-shadow .15s; }
+.flow-card:hover { border-color: var(--primary-ring); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.flow-card .fc-head { display: flex; align-items: center; gap: var(--sp-3); }
+.flow-card h4 { font-size: 14.5px; font-weight: 600; }
+.flow-card .fc-desc { font-size: 12.5px; color: var(--text-3); line-height: 1.5; }
+.flow-card .fc-foot { display: flex; align-items: center; gap: var(--sp-3); margin-top: auto; padding-top: var(--sp-3); border-top: 1px solid var(--border); font-size: 12px; color: var(--text-3); }
+.spark { display: flex; align-items: flex-end; gap: 2px; height: 22px; }
+.spark i { width: 5px; border-radius: 2px; background: var(--ok); opacity: .8; }
+.spark i.f { background: var(--err); }
+
+.empty { text-align: center; padding: var(--sp-6); color: var(--text-3); }
+
+/* ============================================================
+   VENDOR DETAIL  (vendor form + its products)
+   ============================================================ */
+.vd-grid { display: grid; grid-template-columns: 380px 1fr; gap: var(--sp-5); align-items: start; }
+@media (max-width: 1120px) { .vd-grid { grid-template-columns: 1fr; } }
+
+.card-pad { padding: var(--sp-5); }
+
+.section-head { display: flex; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-4); }
+.section-head h3 { font-size: 15px; font-weight: 700; letter-spacing: -.2px; }
+.section-head .count-chip { font-size: 12px; font-weight: 600; color: var(--text-2); background: var(--surface-2); border: 1px solid var(--border); border-radius: 99px; padding: 1px 9px; }
+.section-head .actions { margin-left: auto; display: flex; gap: var(--sp-2); }
+
+/* labeled fields */
+.fld { margin-bottom: var(--sp-4); }
+.fld:last-child { margin-bottom: 0; }
+.fld > label { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: var(--text-2); margin-bottom: 6px; }
+.fld .req { color: var(--err); }
+.fld .help { font-size: 11.5px; color: var(--text-3); margin-top: 6px; display: flex; align-items: center; gap: 5px; }
+.fld .help svg { width: 13px; height: 13px; }
+.fld-row { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); }
+
+select.input { appearance: none; -webkit-appearance: none; cursor: pointer; padding-right: 34px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238290aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat: no-repeat; background-position: right 11px center; }
+
+/* custom key/value fields (FieldsJson) */
+.kv-row { display: grid; grid-template-columns: 1fr 1.2fr auto; gap: var(--sp-2); margin-bottom: var(--sp-2); }
+.icon-btn.xs { width: 34px; height: 34px; }
+.icon-btn.xs svg { width: 15px; }
+.kv-empty { font-size: 12.5px; color: var(--text-3); padding: 12px; text-align: center; border: 1px dashed var(--border-2); border-radius: var(--r-md); }
+
+/* product variants (SKU + description) */
+.var-row { display: grid; grid-template-columns: 150px 1fr auto; gap: var(--sp-2); margin-bottom: var(--sp-2); align-items: start; }
+.var-row .input { padding: 8px 10px; }
+
+/* meta list */
+.meta-list { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4) var(--sp-3); margin-top: var(--sp-4); padding-top: var(--sp-4); border-top: 1px solid var(--border); }
+.meta-list .mi .l { font-size: 11px; color: var(--text-3); display: flex; align-items: center; gap: 5px; }
+.meta-list .mi .l svg { width: 13px; }
+.meta-list .mi .val { font-size: 13.5px; font-weight: 600; margin-top: 3px; }
+
+/* product cards */
+.prod-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(238px, 1fr)); gap: var(--sp-4); }
+.prod-card { display: flex; flex-direction: column; overflow: hidden; cursor: pointer; transition: border-color .15s, box-shadow .15s, transform .08s; }
+.prod-card:hover { border-color: var(--primary-ring); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.prod-thumb { height: 128px; display: grid; place-items: center; position: relative; border-bottom: 1px solid var(--border); }
+.prod-thumb .ph { font-size: 36px; font-weight: 700; color: #fff; text-shadow: 0 1px 8px rgba(0,0,0,.25); }
+.prod-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.prod-thumb .badge { position: absolute; top: 8px; right: 8px; background: var(--surface); border: 1px solid var(--border-2); color: var(--text-2); box-shadow: var(--shadow-sm); }
+.prod-thumb .badge .dot { background: var(--idle); }
+.prod-body { padding: var(--sp-3) var(--sp-4) var(--sp-4); display: flex; flex-direction: column; gap: 9px; }
+.prod-body h4 { font-size: 14px; font-weight: 600; line-height: 1.3; }
+.prod-flow { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; color: var(--text-2); background: var(--surface-2); border: 1px solid var(--border); border-radius: 99px; padding: 3px 9px; align-self: flex-start; max-width: 100%; }
+.prod-flow svg { width: 13px; height: 13px; color: var(--primary); flex: none; }
+.prod-flow.none { color: var(--text-3); } .prod-flow.none svg { color: var(--text-3); }
+.prod-flow span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.prod-foot { display: flex; align-items: center; gap: var(--sp-2); font-size: 11.5px; color: var(--text-3); }
+
+.add-card { border-style: dashed; min-height: 224px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: var(--text-3); cursor: pointer; transition: color .15s, border-color .15s, background .15s; }
+.add-card:hover { color: var(--primary); border-color: var(--primary-ring); background: var(--primary-soft); }
+.add-card svg { width: 26px; height: 26px; }
+.add-card span { font-size: 13px; font-weight: 600; }
+
+/* gradient tiles for product images */
+.grad-indigo { background: linear-gradient(135deg,#6d8bff,#5575ff); }
+.grad-green  { background: linear-gradient(135deg,#3fcf8e,#14935f); }
+.grad-amber  { background: linear-gradient(135deg,#f7c259,#d6792a); }
+.grad-pink   { background: linear-gradient(135deg,#cf95ff,#8a6dff); }
+.grad-cyan   { background: linear-gradient(135deg,#5ed3f0,#2f86d6); }
+
+/* image dropzone (product modal) */
+.dropzone { border: 1.5px dashed var(--border-2); border-radius: var(--r-md); padding: var(--sp-4); display: flex; gap: var(--sp-4); align-items: center; transition: border-color .15s, background .15s; }
+.dropzone:hover { border-color: var(--primary-ring); }
+.dz-thumb { width: 86px; height: 86px; border-radius: var(--r-md); display: grid; place-items: center; flex: none; color: #fff; font-weight: 700; font-size: 28px; overflow: hidden; }
+.dz-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.dz-main { min-width: 0; }
+.dz-main b { font-size: 13px; }
+.dz-main p { font-size: 11.5px; color: var(--text-3); margin: 3px 0 9px; }
+.dz-actions { display: flex; gap: var(--sp-2); }
+
+/* ============================================================
+   ORDER DETAIL — cart line items + execution history
+   ============================================================ */
+.cart-item {
+  display: grid; grid-template-columns: 44px 1fr auto auto; align-items: center; gap: var(--sp-3);
+  padding: var(--sp-3); border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface);
+}
+.cart-item + .cart-item { margin-top: var(--sp-2); }
+.cart-thumb { width: 44px; height: 44px; border-radius: 9px; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 17px; flex: none; }
+.cart-main { min-width: 0; }
+.cart-main h5 { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cart-main .sku { font-family: var(--font-mono); font-size: 11.5px; color: var(--text-3); }
+
+.qty { display: inline-flex; align-items: center; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+.qty button { width: 30px; height: 32px; display: grid; place-items: center; border: none; background: none; color: var(--text-2); cursor: pointer; transition: background .12s, color .12s; }
+.qty button:hover { background: var(--surface-3); color: var(--text); }
+.qty button svg { width: 14px; height: 14px; }
+.qty input { width: 44px; height: 32px; text-align: center; border: none; border-left: 1px solid var(--border); border-right: 1px solid var(--border); background: var(--surface); color: var(--text); font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 13px; outline: none; }
+.cart-foot { margin-top: var(--sp-3); font-size: 12px; color: var(--text-3); display: flex; align-items: center; gap: 6px; }
+.cart-foot svg { width: 14px; height: 14px; }
+
+.order-col { display: flex; flex-direction: column; gap: var(--sp-5); min-width: 0; }
+.exec-cta { width: 100%; justify-content: center; margin-top: var(--sp-5); }
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+.modal-scrim { position: fixed; inset: 0; background: var(--scrim); z-index: var(--z-modal); display: none; place-items: center; padding: var(--sp-5); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+.modal-scrim.open { display: grid; animation: scrimIn .15s var(--ease); }
+@keyframes scrimIn { from { opacity: 0; } to { opacity: 1; } }
+.modal { width: min(560px, 100%); max-height: 88vh; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--border-2); border-radius: var(--r-xl); box-shadow: var(--shadow-lg); overflow: hidden; animation: modalIn .2s var(--ease); }
+@keyframes modalIn { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: none; } }
+.modal-head { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-4) var(--sp-5); border-bottom: 1px solid var(--border); flex: none; }
+.modal-head .mh-ic { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; flex: none; }
+.modal-head h3 { font-size: 16px; font-weight: 700; }
+.modal-head .sub { font-size: 12px; color: var(--text-3); margin-top: 1px; }
+.modal-head .icon-btn { margin-left: auto; }
+.modal-body { padding: var(--sp-5); overflow-y: auto; flex: 1; min-height: 0; }
+.modal-foot { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-4) var(--sp-5); border-top: 1px solid var(--border); background: var(--surface-2); flex: none; }
+.modal-foot .spacer { flex: 1; }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ============== SIDEBAR ============== -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo"><i data-lucide="workflow"></i></div>
+      <div>
+        <h1>Procurement Flow</h1>
+        <span>Cloudwawi</span>
+      </div>
+    </div>
+    <nav class="nav">
+      <div class="nav-group">
+        <div class="nav-item" data-view="dashboard"><i data-lucide="layout-dashboard"></i> Dashboard</div>
+        <div class="nav-item" data-view="flows"><i data-lucide="git-branch"></i> Flows <span class="badge-count">8</span></div>
+        <div class="nav-item active" data-view="orders"><i data-lucide="shopping-cart"></i> Orders <span class="badge-count">6</span></div>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">Configure</div>
+        <div class="nav-item" data-view="parameters"><i data-lucide="sliders-horizontal"></i> Parameters</div>
+        <div class="nav-item" data-view="vendors"><i data-lucide="store"></i> Vendors</div>
+        <div class="nav-item" data-view="credentials"><i data-lucide="key-round"></i> Credentials</div>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">System</div>
+        <div class="nav-item" data-view="settings"><i data-lucide="settings"></i> Settings</div>
+      </div>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="user">
+        <div class="avatar">YA</div>
+        <div class="meta"><b>Yehor A.</b><small>Procurement admin</small></div>
+        <i data-lucide="chevrons-up-down" style="margin-left:auto;width:15px;color:var(--text-3)"></i>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============== MAIN ============== -->
+  <div class="main">
+    <header class="topbar">
+      <div class="crumbs" id="crumbs">
+        <b>Orders</b>
+      </div>
+      <div class="search">
+        <i data-lucide="search"></i>
+        <input placeholder="Search flows, runs, vendors…" />
+        <kbd>⌘K</kbd>
+      </div>
+      <button class="icon-btn" title="Notifications"><i data-lucide="bell"></i></button>
+      <button class="icon-btn" id="themeBtn" title="Toggle theme"><i data-lucide="moon"></i></button>
+    </header>
+
+    <!-- ===================== EXECUTION DETAIL (one attempt) ===================== -->
+    <section class="view" id="view-executions">
+      <!-- exec header -->
+      <div class="exec-head">
+        <button class="icon-btn back" title="Back to order" aria-label="Back to order" onclick="go('order-detail')"><i data-lucide="arrow-left"></i></button>
+        <div class="exec-title">
+          <div class="row1">
+            <h2 id="execName">Acme DevTools — Bulk License Purchase</h2>
+            <span class="pill warn"><span class="dot pulse"></span> Awaiting human</span>
+          </div>
+          <div class="row2">
+            <span class="id-chip" id="execRunId">run_1042</span>
+            <span class="sep"></span><span>Flow <b style="color:var(--text-2)">v7</b></span>
+            <span class="sep"></span><i data-lucide="user" style="width:13px"></i><span>Triggered manually · Yehor A.</span>
+            <span class="sep"></span><i data-lucide="clock" style="width:13px"></i><span class="mono">Started 14:32:08 · 02m 14s elapsed</span>
+          </div>
+        </div>
+        <div class="exec-actions">
+          <button class="btn sm"><i data-lucide="refresh-cw"></i> Retry step</button>
+          <button class="btn sm danger"><i data-lucide="square"></i> Abort</button>
+          <button class="btn sm primary"><i data-lucide="hand"></i> Resume</button>
+        </div>
+      </div>
+
+      <!-- progress -->
+      <div class="exec-progress">
+        <span class="progress-meta">Step 9 / 13</span>
+        <div class="progress-track">
+          <i class="ok" style="flex:8"></i><i class="run" style="flex:1"></i><i class="idle" style="flex:4"></i>
+        </div>
+        <span class="progress-meta">62% · ETA ~01m 40s</span>
+      </div>
+
+      <!-- 3-pane body -->
+      <div class="exec-body">
+        <!-- LEFT: steps -->
+        <div class="steps-pane">
+          <div class="pane-head"><h3>Steps</h3><span class="count">13 total</span></div>
+          <div class="steps-list" id="stepsList"><!-- injected --></div>
+        </div>
+
+        <!-- CENTER: screenshot stage -->
+        <div class="stage">
+          <div class="stage-bar">
+            <div class="url"><i data-lucide="lock"></i><span id="shotUrl">https://acme-devtools.com/checkout</span></div>
+            <div class="zoom">
+              <button id="zOut" title="Zoom out"><i data-lucide="minus"></i></button>
+              <span class="lvl" id="zLvl">100%</span>
+              <button id="zIn" title="Zoom in"><i data-lucide="plus"></i></button>
+            </div>
+            <button class="icon-btn" title="Open full size"><i data-lucide="maximize-2"></i></button>
+            <button class="icon-btn" title="Download"><i data-lucide="download"></i></button>
+          </div>
+
+          <div class="stage-scroll">
+            <div class="shot" id="shot">
+              <div class="chrome"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><div class="addr"></div></div>
+              <!-- annotation + target injected; SVG "page" injected -->
+              <div id="shotInner"></div>
+            </div>
+          </div>
+
+          <div class="stage-foot">
+            <i data-lucide="camera" style="width:14px"></i>
+            <span>Captured at <span class="mono" id="shotTime">14:34:01.882</span></span>
+            <span class="spacer"></span>
+            <span id="shotDim" class="mono">1280 × 824</span>
+          </div>
+        </div>
+
+        <!-- RIGHT: inspector -->
+        <div class="inspector">
+          <div class="insp-head">
+            <div class="k" id="iKind">CONDITIONAL BRANCH</div>
+            <h3 id="iName">Detect CAPTCHA challenge</h3>
+            <div class="meta" id="iMeta">
+              <span class="pill warn"><i data-lucide="alert-triangle"></i> Waiting</span>
+              <span class="id-chip">step_09</span>
+            </div>
+          </div>
+          <div class="tabs">
+            <div class="tab active" data-tab="details">Details</div>
+            <div class="tab" data-tab="logs">Logs</div>
+            <div class="tab" data-tab="vars">Variables</div>
+            <div class="tab" data-tab="net">Network</div>
+          </div>
+          <div class="insp-scroll">
+            <!-- DETAILS -->
+            <div class="tabpane active" id="tab-details">
+              <div id="detailsBody"></div>
+            </div>
+            <!-- LOGS -->
+            <div class="tabpane" id="tab-logs">
+              <div class="log">
+                <div class="ln"><span class="ts">14:33:58.114</span><span class="lv i">INFO</span><span class="msg">Navigated to /checkout (HTTP 200, 612ms)</span></div>
+                <div class="ln"><span class="ts">14:33:58.640</span><span class="lv i">INFO</span><span class="msg">Waiting for selector form#checkout</span></div>
+                <div class="ln"><span class="ts">14:33:59.901</span><span class="lv ok">OK</span><span class="msg">Branch condition evaluating: isVisible(".g-recaptcha")</span></div>
+                <div class="ln"><span class="ts">14:34:01.730</span><span class="lv w">WARN</span><span class="msg">CAPTCHA element detected → CloakBrowser auto-solve failed (score 0.31)</span></div>
+                <div class="ln"><span class="ts">14:34:01.882</span><span class="lv w">WARN</span><span class="msg">Falling back to human-intervention. Screenshot captured.</span></div>
+                <div class="ln"><span class="ts">14:34:01.883</span><span class="lv e">PAUSE</span><span class="msg">Execution paused — awaiting operator input.</span></div>
+              </div>
+            </div>
+            <!-- VARIABLES -->
+            <div class="tabpane" id="tab-vars">
+              <div class="field"><label>Run parameters</label>
+                <div class="code"><span class="key">vendor</span>:        <span class="str">"Acme DevTools"</span>
+<span class="key">product</span>:       <span class="str">"IntelliJ IDEA Ultimate"</span>
+<span class="key">quantity</span>:      <span class="num2">25</span>
+<span class="key">billingCycle</span>:  <span class="str">"annual"</span>
+<span class="key">couponCode</span>:    <span class="str">"VINOSOFT-2026"</span></div>
+              </div>
+              <div class="field"><label>Captured so far</label>
+                <div class="code"><span class="key">cartSubtotal</span>:  <span class="str">"$14,975.00"</span>
+<span class="key">cartId</span>:        <span class="str">"ck_9f2a71be"</span>
+<span class="key">seatsAvail</span>:    <span class="num2">true</span>
+<span class="key">licenseKeys</span>:   <span class="num2">null</span>  <span style="color:var(--text-3)">// pending step 12</span></div>
+              </div>
+            </div>
+            <!-- NETWORK -->
+            <div class="tabpane" id="tab-net">
+              <div class="dl" style="grid-template-columns:1fr auto auto; gap:10px 16px">
+                <dt style="color:var(--text)">GET /checkout</dt><dd class="pill ok" style="padding:1px 8px">200</dd><dd class="mono cell-mut">612ms</dd>
+                <dt style="color:var(--text)">GET /api/cart/ck_9f2a71be</dt><dd class="pill ok" style="padding:1px 8px">200</dd><dd class="mono cell-mut">144ms</dd>
+                <dt style="color:var(--text)">POST /recaptcha/verify</dt><dd class="pill err" style="padding:1px 8px">403</dd><dd class="mono cell-mut">288ms</dd>
+                <dt style="color:var(--text)">GET /assets/widget.js</dt><dd class="pill ok" style="padding:1px 8px">200</dd><dd class="mono cell-mut">73ms</dd>
+              </div>
+              <p class="hint" style="margin-top:16px"><i data-lucide="info"></i> Captured via CloakBrowser network interception.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== ORDERS (list) — DEFAULT ===================== -->
+    <section class="view active" id="view-orders">
+      <div class="scroll"><div class="pad">
+        <div class="page-head">
+          <div class="t"><h2>Orders</h2><p>Each order is a cart of products from one vendor, fulfilled by running its flow.</p></div>
+          <div class="actions"><button class="btn primary"><i data-lucide="plus"></i> New order</button></div>
+        </div>
+        <div class="card table-wrap">
+          <div class="toolbar">
+            <div class="seg"><button class="active">All</button><button>Running</button><button>Needs attention</button><button>Draft</button></div>
+            <span class="cell-mut" style="margin-left:auto;font-size:12px">6 orders</span>
+          </div>
+          <table><thead><tr><th>Order</th><th>Vendor</th><th>Products</th><th>Flow</th><th>Last run</th><th>Updated</th></tr></thead>
+          <tbody id="orderRows"></tbody></table>
+        </div>
+      </div></div>
+    </section>
+
+    <!-- ===================== ORDER DETAIL ===================== -->
+    <section class="view" id="view-order-detail">
+      <!-- header -->
+      <div class="exec-head">
+        <button class="icon-btn back" title="Back to orders" aria-label="Back to orders" onclick="go('orders')"><i data-lucide="arrow-left"></i></button>
+        <div class="exec-title">
+          <div class="row1">
+            <h2 id="odName">Order</h2>
+            <span class="pill idle" id="odStatus"><span class="dot"></span> Draft</span>
+          </div>
+          <div class="row2">
+            <span class="id-chip" id="odId">order_1042</span>
+            <span class="sep"></span><span id="odVendor"></span>
+            <span class="sep"></span><i data-lucide="git-branch" style="width:13px"></i><span id="odFlow"></span>
+            <span class="sep"></span><i data-lucide="calendar-plus" style="width:13px"></i><span class="mono" id="odCreated2"></span>
+          </div>
+        </div>
+        <div class="exec-actions">
+          <button class="btn sm danger"><i data-lucide="trash-2"></i> Delete</button>
+          <button class="btn sm primary" onclick="executeOrder()"><i data-lucide="play"></i> Execute</button>
+        </div>
+      </div>
+
+      <div class="scroll"><div class="pad">
+        <div class="vd-grid">
+          <!-- LEFT: order summary -->
+          <div class="card card-pad">
+            <div class="section-head"><h3>Summary</h3></div>
+            <dl class="dl" style="grid-template-columns:104px 1fr; gap:11px 12px">
+              <dt>Vendor</dt><dd id="odVendorVal">—</dd>
+              <dt>Flow</dt><dd><span id="odFlowVal">—</span> <span class="id-chip" id="odFlowVer">v1</span></dd>
+              <dt>Products</dt><dd class="num" id="odItemsVal">0</dd>
+              <dt>Total seats</dt><dd class="num" id="odQtyVal">0</dd>
+            </dl>
+            <div class="meta-list">
+              <div class="mi"><div class="l"><i data-lucide="calendar-plus"></i> Created</div><div class="val mono" id="odCreatedVal">—</div></div>
+              <div class="mi"><div class="l"><i data-lucide="calendar-clock"></i> Updated</div><div class="val mono" id="odUpdatedVal">—</div></div>
+            </div>
+            <button class="btn primary exec-cta" onclick="executeOrder()"><i data-lucide="play"></i> Execute order</button>
+            <p class="hint" style="margin-top:10px;justify-content:center"><i data-lucide="info"></i> Runs the flow against this cart and records an attempt.</p>
+          </div>
+
+          <!-- RIGHT: products (cart) + execution history -->
+          <div class="order-col">
+            <div>
+              <div class="section-head">
+                <h3>Products</h3><span class="count-chip" id="cartCount">0</span>
+                <div class="actions"><button class="btn sm primary" onclick="openAddItem()"><i data-lucide="plus"></i> Add product</button></div>
+              </div>
+              <p class="hint" style="margin:-8px 0 16px"><i data-lucide="info"></i> The cart of products this order will purchase. Adjust quantities or remove items before executing.</p>
+              <div id="cartList"></div>
+              <div class="cart-foot" id="cartFoot"></div>
+            </div>
+
+            <div>
+              <div class="section-head"><h3>Execution history</h3><span class="count-chip" id="attCount">0</span></div>
+              <p class="hint" style="margin:-8px 0 16px"><i data-lucide="info"></i> Every <b style="color:var(--text-2)">Execute</b> records an attempt. Open one to inspect its steps and screenshots.</p>
+              <div class="card table-wrap" id="attBody"></div>
+            </div>
+          </div>
+        </div>
+      </div></div>
+    </section>
+
+    <!-- ===================== DASHBOARD ===================== -->
+    <section class="view" id="view-dashboard">
+      <div class="scroll"><div class="pad">
+        <div class="page-head">
+          <div class="t"><h2>Dashboard</h2><p>Procurement automation across all vendors · last 30 days</p></div>
+          <div class="actions"><button class="btn"><i data-lucide="calendar"></i> Last 30 days</button><button class="btn primary"><i data-lucide="plus"></i> New flow</button></div>
+        </div>
+        <div class="stat-grid">
+          <div class="card stat"><div class="label"><i data-lucide="play-circle"></i> Executions</div><div class="v num">1,284</div><div class="sub trend-up"><i data-lucide="trending-up"></i> 12.4% vs prev</div></div>
+          <div class="card stat"><div class="label"><i data-lucide="check-circle-2"></i> Success rate</div><div class="v num">94.2%</div><div class="sub trend-up"><i data-lucide="trending-up"></i> 1.8%</div></div>
+          <div class="card stat"><div class="label"><i data-lucide="key-round"></i> Licenses captured</div><div class="v num">8,602</div><div class="sub cell-mut">across 8 vendors</div></div>
+          <div class="card stat"><div class="label"><i data-lucide="hand"></i> Needs attention</div><div class="v num" style="color:var(--warn)">3</div><div class="sub trend-down"><i data-lucide="alert-triangle"></i> CAPTCHA holds</div></div>
+        </div>
+        <div class="card table-wrap">
+          <div class="toolbar"><b style="font-size:13px">Recent executions</b><span class="cell-mut" style="margin-left:auto;font-size:12px">live</span></div>
+          <table><thead><tr><th>Run</th><th>Flow</th><th>Status</th><th>Started</th><th>Duration</th></tr></thead>
+          <tbody id="dashRuns"></tbody></table>
+        </div>
+      </div></div>
+    </section>
+
+    <!-- ===================== FLOWS ===================== -->
+    <section class="view" id="view-flows">
+      <div class="scroll"><div class="pad">
+        <div class="page-head">
+          <div class="t"><h2>Flows</h2><p>Reusable purchase automations. Each edit creates a new version.</p></div>
+          <div class="actions"><button class="btn"><i data-lucide="sparkles"></i> Build with AI</button><button class="btn primary"><i data-lucide="plus"></i> New flow</button></div>
+        </div>
+        <div class="flow-card-grid" id="flowCards"></div>
+      </div></div>
+    </section>
+
+    <!-- ===================== PARAMETERS ===================== -->
+    <section class="view" id="view-parameters">
+      <div class="scroll"><div class="pad" style="max-width:920px">
+        <div class="page-head"><div class="t"><h2>Parameters</h2><p>Inputs collected before a flow runs. Bound into steps as <span class="param-tag"><b>{{param}}</b></span>.</p></div>
+          <div class="actions"><button class="btn primary"><i data-lucide="plus"></i> Add parameter</button></div></div>
+        <div class="card table-wrap">
+          <table><thead><tr><th>Name</th><th>Type</th><th>Default</th><th>Required</th><th>Used in</th></tr></thead>
+          <tbody id="paramRows"></tbody></table>
+        </div>
+        <p class="hint" style="margin-top:16px"><i data-lucide="shield"></i> Payment & credential parameters resolve from Windows Credential Manager at runtime — never stored here.</p>
+      </div></div>
+    </section>
+
+    <!-- ===================== VENDORS ===================== -->
+    <section class="view" id="view-vendors">
+      <div class="scroll"><div class="pad">
+        <div class="page-head"><div class="t"><h2>Vendors</h2><p>Software vendors targeted by automation flows.</p></div>
+          <div class="actions"><button class="btn primary"><i data-lucide="plus"></i> Add vendor</button></div></div>
+        <div class="card table-wrap">
+          <table><thead><tr><th>Vendor</th><th>Domain</th><th>Flows</th><th>CAPTCHA strategy</th><th>Status</th></tr></thead>
+          <tbody id="vendorRows"></tbody></table>
+        </div>
+      </div></div>
+    </section>
+
+    <!-- ===================== CREDENTIALS ===================== -->
+    <section class="view" id="view-credentials">
+      <div class="scroll"><div class="pad" style="max-width:820px">
+        <div class="page-head"><div class="t"><h2>Credentials</h2><p>References to secrets stored in Windows Credential Manager.</p></div>
+          <div class="actions"><button class="btn primary"><i data-lucide="plus"></i> Add credential</button></div></div>
+        <div class="alert warn"><i data-lucide="shield-check"></i><div><b>Secrets never leave the vault</b>Values shown here are references only. The desktop agent resolves them locally at execution time.</div></div>
+        <div class="card table-wrap">
+          <table><thead><tr><th>Reference</th><th>Type</th><th>Scope</th><th>Last used</th></tr></thead>
+          <tbody id="credRows"></tbody></table>
+        </div>
+      </div></div>
+    </section>
+
+    <!-- ===================== SETTINGS ===================== -->
+    <section class="view" id="view-settings">
+      <div class="scroll"><div class="pad" style="max-width:820px">
+        <div class="page-head"><div class="t"><h2>Settings</h2><p>Workspace configuration.</p></div></div>
+        <div class="card" style="padding:24px">
+          <div class="form-grid">
+            <div class="lab"><b>Workspace name</b><p>Shown in the sidebar and reports.</p></div>
+            <div><input class="input" value="Cloudwawi Procurement" /></div>
+            <div class="lab"><b>Default CAPTCHA strategy</b><p>Applied to new flows unless overridden.</p></div>
+            <div><div class="seg"><button class="active">CloakBrowser</button><button>Human only</button><button>Hybrid</button></div></div>
+            <div class="lab"><b>Concurrency</b><p>Max parallel executions on the desktop agent.</p></div>
+            <div class="row-inputs" style="max-width:160px"><input class="input mono" value="3" /></div>
+            <div class="lab"><b>Screenshot on every step</b><p>Capture a screenshot after each step (more storage).</p></div>
+            <div><label class="switch"><input type="checkbox" checked><span class="track"></span></label></div>
+            <div class="lab"><b>Pause on failure</b><p>Hold the run for review instead of aborting.</p></div>
+            <div><label class="switch"><input type="checkbox" checked><span class="track"></span></label></div>
+          </div>
+          <div class="divider"></div>
+          <div class="form-grid">
+            <div class="lab"><b>Claude API key</b><p>Powers the AI script builder.</p></div>
+            <div><input class="input mono" type="password" value="sk-ant-•••••••••••••••••••" /><p class="hint"><i data-lucide="check-circle-2" style="color:var(--ok)"></i> Connected · claude-opus-4-8</p></div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:24px;justify-content:flex-end"><button class="btn ghost">Cancel</button><button class="btn primary"><i data-lucide="check"></i> Save changes</button></div>
+        </div>
+      </div></div>
+    </section>
+
+    <!-- ===================== VENDOR DETAIL ===================== -->
+    <section class="view" id="view-vendor-detail">
+      <!-- header -->
+      <div class="exec-head">
+        <button class="icon-btn back" title="Back to vendors" aria-label="Back to vendors" onclick="go('vendors')"><i data-lucide="arrow-left"></i></button>
+        <div class="exec-title">
+          <div class="row1">
+            <span class="flow-ic" id="vdIcon" style="width:30px;height:30px"><i data-lucide="store"></i></span>
+            <h2 id="vdName">Vendor</h2>
+            <span class="pill" id="vdStatus"><span class="dot"></span> Healthy</span>
+          </div>
+          <div class="row2">
+            <span class="id-chip" id="vdId">vendor_1</span>
+            <span class="sep"></span><i data-lucide="package" style="width:13px"></i><span id="vdProdCount">0 products</span>
+            <span class="sep"></span><i data-lucide="git-branch" style="width:13px"></i><span id="vdFlowCount">0 flows</span>
+          </div>
+        </div>
+        <div class="exec-actions">
+          <button class="btn sm danger"><i data-lucide="trash-2"></i> Delete vendor</button>
+          <button class="btn sm primary"><i data-lucide="check"></i> Save changes</button>
+        </div>
+      </div>
+
+      <div class="scroll"><div class="pad">
+        <div class="vd-grid">
+          <!-- LEFT: vendor form -->
+          <div class="card card-pad">
+            <div class="section-head"><h3>Vendor details</h3></div>
+            <div class="fld">
+              <label for="vfName">Name <span class="req">*</span></label>
+              <input class="input" id="vfName" value="Acme DevTools" />
+            </div>
+            <div class="fld">
+              <label>Active</label>
+              <div class="fld-row">
+                <span class="help" style="margin:0"><i data-lucide="power"></i> Inactive vendors are hidden from new runs</span>
+                <label class="switch"><input type="checkbox" id="vfActive" checked><span class="track"></span></label>
+              </div>
+            </div>
+            <div class="fld">
+              <label>Custom fields <span class="cell-mut" style="font-weight:500">· stored as FieldsJson</span></label>
+              <div id="vfFields"></div>
+              <button class="btn sm ghost" style="margin-top:6px" onclick="addKvRow('vfFields')"><i data-lucide="plus"></i> Add field</button>
+            </div>
+
+            <div class="meta-list">
+              <div class="mi"><div class="l"><i data-lucide="calendar-plus"></i> Created</div><div class="val mono" id="vdCreated">—</div></div>
+              <div class="mi"><div class="l"><i data-lucide="calendar-clock"></i> Updated</div><div class="val mono" id="vdUpdated">—</div></div>
+              <div class="mi"><div class="l"><i data-lucide="shopping-cart"></i> Orders</div><div class="val num" id="vdOrders">0</div></div>
+              <div class="mi"><div class="l"><i data-lucide="git-branch"></i> Flows</div><div class="val num" id="vdFlows2">0</div></div>
+            </div>
+          </div>
+
+          <!-- RIGHT: products -->
+          <div>
+            <div class="section-head">
+              <h3>Products</h3><span class="count-chip" id="prodCount">0</span>
+              <div class="actions">
+                <button class="btn sm primary" onclick="openProduct(-1)"><i data-lucide="plus"></i> Add product</button>
+              </div>
+            </div>
+            <p class="hint" style="margin:-8px 0 16px"><i data-lucide="info"></i> Each product belongs to this vendor and can be assigned a flow that automates its purchase.</p>
+            <div class="prod-grid" id="prodGrid"></div>
+          </div>
+        </div>
+      </div></div>
+    </section>
+
+  </div>
+</div>
+
+<!-- ===================== PRODUCT EDITOR MODAL ===================== -->
+<div class="modal-scrim" id="prodModal" role="dialog" aria-modal="true" aria-labelledby="pmTitle">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="mh-ic" id="pmIcon"><i data-lucide="package"></i></span>
+      <div><h3 id="pmTitle">Edit product</h3><div class="sub" id="pmSub">Acme DevTools</div></div>
+      <button class="icon-btn" title="Close" aria-label="Close" onclick="closeProduct()"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="fld">
+        <label>Image</label>
+        <div class="dropzone">
+          <div class="dz-thumb" id="pmThumb"><span>A</span></div>
+          <div class="dz-main">
+            <b>Product image</b>
+            <p>PNG, JPG or SVG · up to 2 MB · shown on the product card</p>
+            <div class="dz-actions">
+              <button class="btn sm"><i data-lucide="upload"></i> Upload</button>
+              <button class="btn sm ghost"><i data-lucide="trash-2"></i> Remove</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="fld">
+        <label for="pmName">Name <span class="req">*</span></label>
+        <input class="input" id="pmName" placeholder="e.g. IntelliJ IDEA Ultimate" />
+      </div>
+      <div class="fld">
+        <label for="pmFlow">Assigned flow</label>
+        <select class="input" id="pmFlow"></select>
+        <span class="help"><i data-lucide="git-branch"></i> The automation run when this product is purchased</span>
+      </div>
+      <div class="fld">
+        <label>Active</label>
+        <div class="fld-row">
+          <span class="help" style="margin:0"><i data-lucide="power"></i> Available for selection in runs</span>
+          <label class="switch"><input type="checkbox" id="pmActive" checked><span class="track"></span></label>
+        </div>
+      </div>
+      <div class="fld">
+        <label>Variants <span class="cell-mut" style="font-weight:500">· purchasable SKUs for this product</span></label>
+        <div id="pmVariants"></div>
+        <button class="btn sm ghost" style="margin-top:6px" onclick="addVarRow('pmVariants')"><i data-lucide="plus"></i> Add variant</button>
+      </div>
+      <div class="fld">
+        <label>Custom fields <span class="cell-mut" style="font-weight:500">· stored as FieldsJson</span></label>
+        <div id="pmFields"></div>
+        <button class="btn sm ghost" style="margin-top:6px" onclick="addKvRow('pmFields')"><i data-lucide="plus"></i> Add field</button>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn danger" id="pmDelete"><i data-lucide="trash-2"></i> Delete</button>
+      <span class="spacer"></span>
+      <button class="btn ghost" onclick="closeProduct()">Cancel</button>
+      <button class="btn primary" onclick="saveProduct()"><i data-lucide="check"></i> Save product</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== ADD PRODUCT TO ORDER MODAL ===================== -->
+<div class="modal-scrim" id="addItemModal" role="dialog" aria-modal="true" aria-labelledby="aiTitle">
+  <div class="modal" style="width:min(460px,100%)">
+    <div class="modal-head">
+      <span class="mh-ic tint-indigo"><i data-lucide="package-plus"></i></span>
+      <div><h3 id="aiTitle">Add product</h3><div class="sub" id="addItemSub">Vendor</div></div>
+      <button class="icon-btn" title="Close" aria-label="Close" onclick="closeAddItem()"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="fld">
+        <label for="aiProduct">Product</label>
+        <select class="input" id="aiProduct" onchange="populateVariants()"></select>
+      </div>
+      <div class="fld">
+        <label for="aiVariant">Variant / SKU</label>
+        <select class="input" id="aiVariant"></select>
+      </div>
+      <div class="fld">
+        <label for="aiQty">Quantity</label>
+        <input class="input mono" id="aiQty" type="number" min="1" value="1" style="max-width:140px" />
+      </div>
+    </div>
+    <div class="modal-foot">
+      <span class="spacer"></span>
+      <button class="btn ghost" onclick="closeAddItem()">Cancel</button>
+      <button class="btn primary" onclick="addItemConfirm()"><i data-lucide="plus"></i> Add to order</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   DATA
+   ============================================================ */
+const STEPS = [
+  {n:1, kind:'Navigate', name:'Open vendor login', sub:'/login', st:'ok', t:'0.6s', url:'https://acme-devtools.com/login'},
+  {n:2, kind:'Fill', name:'Enter account email', sub:'#email = {{account}}', st:'ok', t:'0.3s', url:'https://acme-devtools.com/login'},
+  {n:3, kind:'Click', name:'Submit sign-in', sub:'button[type=submit]', st:'ok', t:'1.1s', url:'https://acme-devtools.com/login'},
+  {n:4, kind:'Navigate', name:'Go to product catalog', sub:'/products', st:'ok', t:'0.8s', url:'https://acme-devtools.com/products'},
+  {n:5, kind:'Extract', name:'Read catalog & pricing', sub:'→ cartSubtotal, seatsAvail', st:'ok', t:'0.4s', url:'https://acme-devtools.com/products'},
+  {n:6, kind:'Fill', name:'Set quantity', sub:'#qty = {{quantity}} (25)', st:'ok', t:'0.2s', url:'https://acme-devtools.com/products'},
+  {n:7, kind:'Click', name:'Add to cart', sub:'button.add-to-cart', st:'ok', t:'0.9s', url:'https://acme-devtools.com/cart'},
+  {n:8, kind:'Navigate', name:'Proceed to checkout', sub:'/checkout', st:'ok', t:'0.6s', url:'https://acme-devtools.com/checkout', cam:true},
+  {n:9, kind:'ConditionalBranch', name:'Detect CAPTCHA challenge', sub:'if isVisible(.g-recaptcha)', st:'warn', t:'2.0s', url:'https://acme-devtools.com/checkout', cam:true},
+  {n:10, kind:'CustomCode', name:'Apply coupon code', sub:'await page.apply({{couponCode}})', st:'idle', t:'—', url:'https://acme-devtools.com/checkout'},
+  {n:11, kind:'Click', name:'Place order', sub:'button#place-order', st:'idle', t:'—', url:'https://acme-devtools.com/checkout'},
+  {n:12, kind:'Extract', name:'Capture license keys', sub:'→ licenseKeys[]', st:'idle', t:'—', url:'https://acme-devtools.com/confirmation'},
+  {n:13, kind:'Screenshot', name:'Save confirmation', sub:'fullPage', st:'idle', t:'—', url:'https://acme-devtools.com/confirmation', cam:true},
+];
+
+const KIND_ICON = { Navigate:'compass', Fill:'pencil', Click:'mouse-pointer-click', Extract:'download', Screenshot:'camera', ConditionalBranch:'git-fork', CustomCode:'code-2' };
+const ST_ICON = { ok:'check', warn:'pause', err:'x', run:'loader', idle:'circle' };
+const ST_PILL = { ok:['ok','check','Succeeded'], warn:['warn','pause','Waiting'], err:['err','x','Failed'], run:['run','loader','Running'], idle:['idle','circle','Pending'] };
+
+/* details renderer per step */
+function detailsFor(s){
+  if(s.st==='warn'){
+    return `<div class="alert warn"><i data-lucide="alert-triangle"></i><div><b>Human intervention required</b>
+      Auto-solve via CloakBrowser failed (confidence 0.31). Solve the CAPTCHA in the agent window, then resume.
+      <div class="acts"><button class="btn sm primary"><i data-lucide="hand"></i> Resume run</button><button class="btn sm"><i data-lucide="skip-forward"></i> Skip step</button></div></div></div>
+      <div class="field"><label>Condition</label><div class="kv">isVisible(".g-recaptcha") === true</div></div>
+      <div class="field"><label>Branch taken</label><div class="kv" style="color:var(--warn)">TRUE → human-intervention fallback</div></div>
+      <dl class="dl">
+        <dt>Selector</dt><dd class="mono">.g-recaptcha</dd>
+        <dt>Strategy</dt><dd>CloakBrowser → Human</dd>
+        <dt>Started</dt><dd class="mono">14:33:59.901</dd>
+        <dt>Paused</dt><dd class="mono">14:34:01.883</dd>
+      </dl>`;
+  }
+  const target = {Navigate:'URL', Fill:'Selector / value', Click:'Selector', Extract:'Output binding', CustomCode:'Script', Screenshot:'Mode'}[s.kind]||'Target';
+  return `<dl class="dl">
+      <dt>Type</dt><dd>${s.kind}</dd>
+      <dt>${target}</dt><dd class="mono" style="word-break:break-all">${s.sub}</dd>
+      <dt>Status</dt><dd>${ST_PILL[s.st][2]}</dd>
+      <dt>Duration</dt><dd class="mono">${s.t}</dd>
+      <dt>URL</dt><dd class="mono" style="word-break:break-all">${s.url}</dd>
+    </dl>
+    ${s.kind==='Extract'?`<div class="field" style="margin-top:16px"><label>Extracted</label><div class="code"><span class="key">cartSubtotal</span>: <span class="str">"$14,975.00"</span>
+<span class="key">seatsAvail</span>: <span class="num2">true</span></div></div>`:''}
+    ${s.kind==='CustomCode'?`<div class="field" style="margin-top:16px"><label>Script (C# escape hatch)</label><div class="code">await page.FillAsync(<span class="str">"#coupon"</span>, couponCode);
+await page.ClickAsync(<span class="str">"#apply"</span>);</div></div>`:''}
+    ${s.cam?'':'<p class="hint" style="margin-top:16px"><i data-lucide="camera-off"></i> No screenshot captured for this step.</p>'}`;
+}
+
+/* a mock vendor "page" rendered as SVG so the screenshot looks real */
+function pageSVG(s){
+  const captcha = s.st==='warn';
+  return `<svg class="page" viewBox="0 0 760 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Vendor checkout page screenshot">
+    <rect width="760" height="480" fill="#ffffff"/>
+    <rect width="760" height="56" fill="#10131c"/>
+    <rect x="28" y="20" width="120" height="16" rx="4" fill="#6d8bff"/>
+    <circle cx="700" cy="28" r="13" fill="#2a3140"/>
+    <rect x="600" y="22" width="70" height="12" rx="6" fill="#2a3140"/>
+    <!-- left: order summary -->
+    <rect x="28" y="88" width="300" height="360" rx="12" fill="#f4f6fb" stroke="#e2e8f2"/>
+    <rect x="48" y="110" width="150" height="14" rx="4" fill="#1b2030"/>
+    <rect x="48" y="146" width="120" height="10" rx="4" fill="#8290aa"/>
+    <rect x="48" y="170" width="220" height="10" rx="4" fill="#c9d2e3"/>
+    <rect x="48" y="186" width="180" height="10" rx="4" fill="#c9d2e3"/>
+    <line x1="48" y1="220" x2="308" y2="220" stroke="#e2e8f2"/>
+    <rect x="48" y="236" width="90" height="10" rx="4" fill="#8290aa"/>
+    <rect x="238" y="236" width="60" height="10" rx="4" fill="#1b2030"/>
+    <rect x="48" y="262" width="90" height="10" rx="4" fill="#8290aa"/>
+    <rect x="238" y="262" width="60" height="10" rx="4" fill="#1b2030"/>
+    <rect x="48" y="300" width="70" height="14" rx="4" fill="#1b2030"/>
+    <rect x="220" y="296" width="80" height="20" rx="4" fill="#14935f"/>
+    <!-- right: payment / captcha -->
+    <rect x="352" y="88" width="380" height="360" rx="12" fill="#ffffff" stroke="#e2e8f2"/>
+    <rect x="376" y="112" width="160" height="16" rx="4" fill="#1b2030"/>
+    <rect x="376" y="152" width="332" height="40" rx="8" fill="#f4f6fb" stroke="#e2e8f2"/>
+    <rect x="392" y="166" width="140" height="12" rx="4" fill="#c9d2e3"/>
+    <rect x="376" y="204" width="160" height="40" rx="8" fill="#f4f6fb" stroke="#e2e8f2"/>
+    <rect x="548" y="204" width="160" height="40" rx="8" fill="#f4f6fb" stroke="#e2e8f2"/>
+    ${captcha ? `
+      <rect x="376" y="268" width="332" height="78" rx="8" fill="#f9fbe7" stroke="#d6c038"/>
+      <rect x="392" y="290" width="22" height="22" rx="4" fill="#fff" stroke="#9aa3b5"/>
+      <rect x="426" y="294" width="150" height="12" rx="4" fill="#5a6478"/>
+      <circle cx="676" cy="301" r="14" fill="#1a73e8"/>
+      <rect x="392" y="368" width="316" height="44" rx="8" fill="#c9cee0"/>
+      <rect x="500" y="384" width="100" height="12" rx="4" fill="#fff"/>
+    ` : `
+      <rect x="376" y="268" width="332" height="40" rx="8" fill="#f4f6fb" stroke="#e2e8f2"/>
+      <rect x="392" y="368" width="316" height="44" rx="8" fill="#3f5bd9"/>
+      <rect x="500" y="384" width="100" height="12" rx="4" fill="#fff"/>
+    `}
+  </svg>`;
+}
+
+/* ============================================================
+   RENDER + INTERACTION
+   ============================================================ */
+let selected = 9, zoom = 100;
+const $ = s => document.querySelector(s);
+
+function renderSteps(){
+  $('#stepsList').innerHTML = STEPS.map(s=>`
+    <div class="step s-${s.st} ${s.n===selected?'active':''}" data-step="${s.n}">
+      <div class="step-rail"><div class="step-node"><i data-lucide="${ST_ICON[s.st]}"></i></div></div>
+      <div class="s-main">
+        <div class="s-type">${s.n}. ${s.kind}</div>
+        <div class="s-name">${s.name}</div>
+        <div class="s-sub">${s.sub}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="s-time">${s.t}</div>
+        ${s.cam?'<div class="s-cam" title="Screenshot available"><i data-lucide="camera"></i></div>':''}
+      </div>
+    </div>`).join('');
+  lucide.createIcons();
+  document.querySelectorAll('.step').forEach(el=>el.onclick=()=>select(+el.dataset.step));
+}
+
+function select(n){
+  selected = n;
+  const s = STEPS.find(x=>x.n===n);
+  document.querySelectorAll('.step').forEach(el=>el.classList.toggle('active', +el.dataset.step===n));
+  // inspector head
+  $('#iKind').textContent = s.kind.replace(/([A-Z])/g,' $1').trim().toUpperCase();
+  $('#iName').textContent = s.name;
+  const [cls,ic,lab] = ST_PILL[s.st];
+  $('#iMeta').innerHTML = `<span class="pill ${cls}"><i data-lucide="${ic}"></i> ${lab}</span><span class="id-chip">step_${String(n).padStart(2,'0')}</span>`;
+  $('#detailsBody').innerHTML = detailsFor(s);
+  // stage
+  $('#shotUrl').textContent = s.url;
+  $('#shotInner').innerHTML = pageSVG(s);
+  // annotation only when there's a captured shot
+  if(s.cam){
+    const inner = $('#shotInner');
+    const box = document.createElement('div'); box.className='target-box';
+    const pin = document.createElement('div'); pin.className='annot';
+    pin.innerHTML = `<div class="halo"></div><div class="pin"><span>${n}</span></div>`;
+    if(s.st==='warn'){ // point at captcha box
+      box.style.cssText='left:49%;top:55.8%;width:43.5%;height:16%';
+      pin.style.cssText='left:49%;top:55.8%';
+    } else {
+      box.style.cssText='left:49%;top:76%;width:41.5%;height:9%';
+      pin.style.cssText='left:49%;top:76%';
+    }
+    inner.appendChild(box); inner.appendChild(pin);
+    $('#shotTime').textContent = s.n===9?'14:34:01.882':'14:33:5'+s.n+'.000';
+  } else {
+    $('#shotInner').insertAdjacentHTML('beforeend',
+      `<div style="position:absolute;inset:30px 0 0;display:grid;place-items:center;background:var(--screenshot-bg)">
+        <div class="empty"><i data-lucide="camera-off" style="width:30px;height:30px;opacity:.5"></i><p style="margin-top:8px">No screenshot for this step</p></div></div>`);
+    $('#shotTime').textContent = '—';
+  }
+  lucide.createIcons();
+}
+
+/* zoom */
+function applyZoom(){ $('#shot').style.transform=`scale(${zoom/100})`; $('#zLvl').textContent=zoom+'%'; }
+$('#zIn').onclick = ()=>{ zoom=Math.min(160,zoom+10); applyZoom(); };
+$('#zOut').onclick= ()=>{ zoom=Math.max(50,zoom-10); applyZoom(); };
+
+/* inspector tabs */
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.tabpane').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active'); $('#tab-'+t.dataset.tab).classList.add('active');
+});
+
+/* ============ sidebar nav / views ============ */
+const CRUMB = {
+  dashboard:['Dashboard'], flows:['Flows'], orders:['Orders'],
+  parameters:['Parameters'], vendors:['Vendors'], credentials:['Credentials'], settings:['Settings']
+};
+/* breadcrumb parts per view — last entry is the current (bold) page */
+function crumbParts(view){
+  if(view==='vendor-detail') return [{l:'Vendors',v:'vendors'},{l:curVendor?curVendor.name:'Vendor'}];
+  if(view==='order-detail')  return [{l:'Orders',v:'orders'},{l:curOrder?curOrder.name:'Order'}];
+  if(view==='executions')    return [{l:'Orders',v:'orders'},{l:curOrder?curOrder.name:'Order',v:'order-detail'},{l:'Run #'+curAttempt}];
+  return CRUMB[view].map(l=>({l}));
+}
+function go(view){
+  let navTarget = view;
+  if(view==='vendor-detail') navTarget='vendors';
+  if(view==='order-detail'||view==='executions') navTarget='orders';
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.view===navTarget));
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  $('#view-'+view).classList.add('active');
+  const parts = crumbParts(view);
+  $('#crumbs').innerHTML = parts.map((p,i)=> i===parts.length-1
+    ? `<b>${p.l}</b>`
+    : `<span style="cursor:pointer" onclick="go('${p.v}')">${p.l}</span><i data-lucide="chevron-right"></i>`).join('');
+  lucide.createIcons();
+}
+document.querySelectorAll('.nav-item').forEach(n=>n.onclick=()=>go(n.dataset.view));
+
+/* ============ theme ============ */
+$('#themeBtn').onclick = ()=>{
+  const root = document.documentElement;
+  const dark = root.getAttribute('data-theme')==='dark';
+  root.setAttribute('data-theme', dark?'light':'dark');
+  $('#themeBtn').innerHTML = `<i data-lucide="${dark?'sun':'moon'}"></i>`;
+  lucide.createIcons();
+};
+
+/* ============ populate other tabs ============ */
+const RUNS = [
+  ['#1042','Acme DevTools — Bulk License','warn','14:32','02m 14s'],
+  ['#1041','Atlassian — Jira renewal','run','14:18','running'],
+  ['#1040','JetBrains — All Products Pack','ok','13:55','01m 02s'],
+  ['#1039','Figma — Org seats top-up','ok','13:40','00m 48s'],
+  ['#1038','1Password — Teams expansion','err','12:11','00m 19s'],
+  ['#1037','GitHub — Copilot Business','ok','11:30','01m 27s'],
+];
+$('#dashRuns').innerHTML = RUNS.map(r=>{
+  const [cls,ic,lab]=ST_PILL[r[2]];
+  return `<tr onclick="openExecution('${r[0].replace('#','')}')"><td><span class="id-chip">${r[0]}</span></td>
+    <td class="cell-strong">${r[1]}</td>
+    <td><span class="pill ${cls}"><i data-lucide="${ic}"></i> ${lab}</span></td>
+    <td class="cell-mut mono">${r[3]}</td><td class="mono ${r[2]==='run'?'':'cell-mut'}">${r[4]}</td></tr>`;
+}).join('');
+
+const FLOWS = [
+  ['Acme DevTools — Bulk License','git-branch','tint-indigo','Buys IntelliJ/Rider seats in bulk, applies the Vinosoft coupon, captures keys.','v7','94%',[1,1,1,1,0,1,1,1]],
+  ['Atlassian — Jira renewal','refresh-cw','tint-green','Renews Jira & Confluence annual subscriptions for the org.','v3','100%',[1,1,1,1,1,1]],
+  ['JetBrains — All Products Pack','package','tint-pink','Purchases the All Products Pack and distributes license keys.','v12','97%',[1,1,1,1,1,0,1,1]],
+  ['Figma — Org seats top-up','users','tint-amber','Adds editor seats to the organization when headcount grows.','v2','89%',[1,1,0,1,1,1]],
+  ['GitHub — Copilot Business','github','tint-indigo','Provisions Copilot Business seats and exports assignments.','v5','100%',[1,1,1,1,1]],
+  ['1Password — Teams expansion','key-round','tint-green','Expands the Teams plan and captures the new invoice.','v1','61%',[1,0,1,0,1,1]],
+];
+$('#flowCards').innerHTML = FLOWS.map(f=>`
+  <div class="card flow-card" onclick="go('orders')">
+    <div class="fc-head"><div class="flow-ic ${f[2]}"><i data-lucide="${f[1]}"></i></div>
+      <div style="min-width:0"><h4>${f[0]}</h4><span class="cell-mut" style="font-size:11.5px">Flow · ${f[4]}</span></div></div>
+    <div class="fc-desc">${f[3]}</div>
+    <div class="fc-foot">
+      <span class="spark">${f[6].map(v=>`<i class="${v?'':'f'}" style="height:${6+Math.random()*16}px"></i>`).join('')}</span>
+      <span style="margin-left:auto;display:flex;align-items:center;gap:5px"><i data-lucide="activity" style="width:13px"></i> ${f[5]} success</span>
+    </div>
+  </div>`).join('');
+
+const PARAMS = [
+  ['vendor','Select','Acme DevTools','yes','8 flows'],
+  ['product','Select','—','yes','8 flows'],
+  ['quantity','Number','1','yes','6 flows'],
+  ['billingCycle','Enum','annual','no','5 flows'],
+  ['couponCode','Text','—','no','3 flows'],
+  ['account','Credential ref','{{cred:acme-login}}','yes','1 flow'],
+];
+$('#paramRows').innerHTML = PARAMS.map(p=>`<tr>
+  <td><span class="param-tag"><b>{{${p[0]}}}</b></span></td>
+  <td class="cell-mut">${p[1]}</td><td class="mono">${p[2]}</td>
+  <td>${p[3]==='yes'?'<span class="pill ok" style="padding:1px 8px">required</span>':'<span class="pill idle" style="padding:1px 8px">optional</span>'}</td>
+  <td class="cell-mut">${p[4]}</td></tr>`).join('');
+
+const VENDORS = [
+  { id:'acme', name:'Acme DevTools', icon:'store', tint:'tint-indigo', status:'ok',
+    created:'2025-11-02', updated:'2026-05-28', orders:142,
+    fields:[{k:'Domain',v:'acme-devtools.com'},{k:'CAPTCHA strategy',v:'CloakBrowser → Human'},{k:'Login URL',v:'https://acme-devtools.com/login'}],
+    flows:['Bulk License Purchase','Seat top-up','Invoice export'],
+    products:[
+      {name:'IntelliJ IDEA Ultimate', flow:'Bulk License Purchase', active:true, grad:'grad-indigo', fields:[{k:'Billing',v:'annual'}],
+        variants:[{sku:'IIU-ANN', desc:'Annual subscription, per seat'},{sku:'IIU-MON', desc:'Monthly subscription, per seat'}]},
+      {name:'Rider', flow:'Bulk License Purchase', active:true, grad:'grad-pink', fields:[],
+        variants:[{sku:'RDR-ANN', desc:'Annual subscription, per seat'}]},
+      {name:'DataGrip', flow:'Seat top-up', active:false, grad:'grad-green', fields:[], variants:[]},
+    ] },
+  { id:'atlassian', name:'Atlassian', icon:'square-stack', tint:'tint-green', status:'ok',
+    created:'2025-09-18', updated:'2026-05-12', orders:87,
+    fields:[{k:'Domain',v:'atlassian.com'},{k:'CAPTCHA strategy',v:'CloakBrowser'}],
+    flows:['Jira renewal','Confluence renewal'],
+    products:[
+      {name:'Jira Software', flow:'Jira renewal', active:true, grad:'grad-cyan', fields:[{k:'Tier',v:'Standard'}]},
+      {name:'Confluence', flow:'Confluence renewal', active:true, grad:'grad-indigo', fields:[]},
+    ] },
+  { id:'jetbrains', name:'JetBrains', icon:'package', tint:'tint-pink', status:'ok',
+    created:'2025-12-01', updated:'2026-04-30', orders:54,
+    fields:[{k:'Domain',v:'jetbrains.com'},{k:'CAPTCHA strategy',v:'CloakBrowser'}],
+    flows:['All Products Pack'],
+    products:[
+      {name:'All Products Pack', flow:'All Products Pack', active:true, grad:'grad-pink', fields:[{k:'Seats',v:'25'}]},
+    ] },
+  { id:'figma', name:'Figma', icon:'figma', tint:'tint-amber', status:'warn',
+    created:'2026-01-22', updated:'2026-05-30', orders:31,
+    fields:[{k:'Domain',v:'figma.com'},{k:'CAPTCHA strategy',v:'Human only'}],
+    flows:['Org seats top-up'],
+    products:[
+      {name:'Editor seat', flow:'Org seats top-up', active:true, grad:'grad-amber', fields:[{k:'Plan',v:'Organization'}]},
+      {name:'Dev seat', flow:null, active:false, grad:'grad-cyan', fields:[]},
+    ] },
+  { id:'github', name:'GitHub', icon:'github', tint:'tint-indigo', status:'ok',
+    created:'2025-10-09', updated:'2026-03-15', orders:60,
+    fields:[{k:'Domain',v:'github.com'},{k:'CAPTCHA strategy',v:'None needed'}],
+    flows:['Copilot Business'],
+    products:[
+      {name:'Copilot Business', flow:'Copilot Business', active:true, grad:'grad-green', fields:[{k:'Seats',v:'40'}]},
+    ] },
+];
+const VMAP = Object.fromEntries(VENDORS.map(v=>[v.id,v]));
+const fld = (v,k)=> (v.fields.find(f=>f.k===k)||{}).v || '—';
+
+$('#vendorRows').innerHTML = VENDORS.map(v=>`<tr onclick="openVendor('${v.id}')">
+  <td class="flow-cell"><span class="flow-ic ${v.tint}"><i data-lucide="${v.icon}"></i></span><span class="cell-strong">${v.name}</span></td>
+  <td class="mono cell-mut">${fld(v,'Domain')}</td>
+  <td>${v.products.length} products</td>
+  <td>${v.flows.length} flows</td>
+  <td><span style="display:inline-flex;align-items:center;gap:10px"><span class="pill ${v.status}"><span class="dot"></span> ${v.status==='ok'?'Healthy':'Review'}</span><i data-lucide="chevron-right" style="width:16px;color:var(--text-3)"></i></span></td></tr>`).join('');
+
+/* ===== vendor detail + product modal ===== */
+let curVendor = null, curProd = -1;
+const esc = s => (s==null?'':String(s).replace(/"/g,'&quot;'));
+
+function kvRowsHTML(arr){
+  if(!arr.length) return `<div class="kv-empty">No custom fields yet</div>`;
+  return arr.map(f=>`<div class="kv-row">
+    <input class="input mono" value="${esc(f.k)}" placeholder="key" />
+    <input class="input mono" value="${esc(f.v)}" placeholder="value" />
+    <button class="icon-btn xs" title="Remove field" aria-label="Remove field" onclick="this.parentElement.remove()"><i data-lucide="x"></i></button>
+  </div>`).join('');
+}
+function addKvRow(id){
+  const wrap = $('#'+id);
+  if(wrap.querySelector('.kv-empty')) wrap.innerHTML='';
+  wrap.insertAdjacentHTML('beforeend', `<div class="kv-row">
+    <input class="input mono" placeholder="key" />
+    <input class="input mono" placeholder="value" />
+    <button class="icon-btn xs" title="Remove field" aria-label="Remove field" onclick="this.parentElement.remove()"><i data-lucide="x"></i></button>
+  </div>`);
+  lucide.createIcons();
+  wrap.lastElementChild.querySelector('input').focus();
+}
+
+function varRowsHTML(arr){
+  if(!arr.length) return `<div class="kv-empty">No variants yet</div>`;
+  return arr.map(v=>`<div class="var-row">
+    <input class="input mono" value="${esc(v.sku)}" placeholder="SKU" />
+    <input class="input" value="${esc(v.desc)}" placeholder="Description" />
+    <button class="icon-btn xs" title="Remove variant" aria-label="Remove variant" onclick="this.parentElement.remove()"><i data-lucide="x"></i></button>
+  </div>`).join('');
+}
+function addVarRow(id){
+  const wrap = $('#'+id);
+  if(wrap.querySelector('.kv-empty')) wrap.innerHTML='';
+  wrap.insertAdjacentHTML('beforeend', `<div class="var-row">
+    <input class="input mono" placeholder="SKU" />
+    <input class="input" placeholder="Description" />
+    <button class="icon-btn xs" title="Remove variant" aria-label="Remove variant" onclick="this.parentElement.remove()"><i data-lucide="x"></i></button>
+  </div>`);
+  lucide.createIcons();
+  wrap.lastElementChild.querySelector('input').focus();
+}
+function readVariants(id){
+  return [...$('#'+id).querySelectorAll('.var-row')].map(r=>{
+    const [sku,desc]=r.querySelectorAll('input'); return {sku:sku.value,desc:desc.value};
+  }).filter(v=>v.sku||v.desc);
+}
+
+function openVendor(id){
+  curVendor = VMAP[id];
+  const v = curVendor;
+  $('#vdName').textContent = v.name;
+  $('#vdIcon').className = 'flow-ic '+v.tint; $('#vdIcon').style.cssText='width:30px;height:30px';
+  $('#vdIcon').innerHTML = `<i data-lucide="${v.icon}"></i>`;
+  $('#vdStatus').className = 'pill '+v.status;
+  $('#vdStatus').innerHTML = `<span class="dot"></span> ${v.status==='ok'?'Healthy':'Review'}`;
+  $('#vdId').textContent = 'vendor_'+v.id;
+  $('#vdProdCount').textContent = v.products.length+' products';
+  $('#vdFlowCount').textContent = v.flows.length+' flows';
+  $('#vfName').value = v.name;
+  $('#vfActive').checked = v.status!=='off';
+  $('#vfFields').innerHTML = kvRowsHTML(v.fields);
+  $('#vdCreated').textContent = v.created;
+  $('#vdUpdated').textContent = v.updated;
+  $('#vdOrders').textContent = v.orders;
+  $('#vdFlows2').textContent = v.flows.length;
+  renderProducts();
+  go('vendor-detail');
+}
+
+function renderProducts(){
+  const v = curVendor;
+  $('#prodCount').textContent = v.products.length;
+  const cards = v.products.map((p,i)=>`
+    <div class="card prod-card" onclick="openProduct(${i})">
+      <div class="prod-thumb ${p.grad}">${p.img?`<img src="${p.img}" alt="${esc(p.name)}"/>`:`<span class="ph">${p.name.charAt(0)}</span>`}
+        ${p.active?'':'<span class="badge pill idle" style="padding:1px 8px"><span class="dot"></span> Inactive</span>'}</div>
+      <div class="prod-body">
+        <h4>${p.name}</h4>
+        ${p.flow
+          ? `<span class="prod-flow"><i data-lucide="git-branch"></i><span>${p.flow}</span></span>`
+          : `<span class="prod-flow none"><i data-lucide="unlink"></i><span>No flow assigned</span></span>`}
+        <div class="prod-foot"><i data-lucide="layers" style="width:13px"></i> ${(p.variants||[]).length} variant${(p.variants||[]).length===1?'':'s'} <span style="opacity:.5">·</span> <i data-lucide="sliders-horizontal" style="width:13px"></i> ${p.fields.length} field${p.fields.length===1?'':'s'}</div>
+      </div>
+    </div>`).join('');
+  $('#prodGrid').innerHTML = cards + `
+    <div class="card add-card" onclick="openProduct(-1)">
+      <i data-lucide="plus-circle"></i><span>Add product</span>
+    </div>`;
+  lucide.createIcons();
+}
+
+function flowOptions(sel){
+  const opts = ['<option value="">— No flow assigned —</option>']
+    .concat(curVendor.flows.map(f=>`<option ${f===sel?'selected':''}>${f}</option>`));
+  return opts.join('');
+}
+
+function openProduct(i){
+  curProd = i;
+  const v = curVendor;
+  const p = i>=0 ? v.products[i] : {name:'',flow:'',active:true,grad:'grad-indigo',fields:[],variants:[]};
+  $('#pmTitle').textContent = i>=0 ? 'Edit product' : 'New product';
+  $('#pmSub').textContent = v.name;
+  $('#pmIcon').className = 'mh-ic '+v.tint;
+  $('#pmName').value = p.name;
+  $('#pmFlow').innerHTML = flowOptions(p.flow);
+  $('#pmActive').checked = p.active;
+  $('#pmVariants').innerHTML = varRowsHTML(p.variants||[]);
+  $('#pmFields').innerHTML = kvRowsHTML(p.fields);
+  const thumb = $('#pmThumb');
+  thumb.className = 'dz-thumb '+(p.grad||'grad-indigo');
+  thumb.innerHTML = p.img?`<img src="${p.img}" alt=""/>`:`<span>${(p.name||'?').charAt(0)||'?'}</span>`;
+  $('#pmDelete').style.display = i>=0 ? '' : 'none';
+  $('#prodModal').classList.add('open');
+  lucide.createIcons();
+  setTimeout(()=>$('#pmName').focus(),50);
+}
+function closeProduct(){ $('#prodModal').classList.remove('open'); }
+function readKv(id){
+  return [...$('#'+id).querySelectorAll('.kv-row')].map(r=>{
+    const [k,val]=r.querySelectorAll('input'); return {k:k.value,v:val.value};
+  }).filter(f=>f.k||f.v);
+}
+function saveProduct(){
+  const p = {
+    name: $('#pmName').value || 'Untitled product',
+    flow: $('#pmFlow').value || null,
+    active: $('#pmActive').checked,
+    variants: readVariants('pmVariants'),
+    fields: readKv('pmFields'),
+  };
+  if(curProd>=0){ p.grad = curVendor.products[curProd].grad; curVendor.products[curProd] = p; }
+  else { p.grad = ['grad-indigo','grad-green','grad-amber','grad-pink','grad-cyan'][curVendor.products.length%5]; curVendor.products.push(p); }
+  $('#vdProdCount').textContent = curVendor.products.length+' products';
+  renderProducts();
+  closeProduct();
+}
+$('#prodModal').onclick = e => { if(e.target.id==='prodModal') closeProduct(); };
+document.addEventListener('keydown', e => { if(e.key==='Escape'){ closeProduct(); closeAddItem(); } });
+window.openVendor = openVendor; window.openProduct = openProduct;
+window.closeProduct = closeProduct; window.saveProduct = saveProduct; window.addKvRow = addKvRow;
+
+/* ============================================================
+   ORDERS — a cart of products from a vendor, run by a flow.
+   Each Execute records an attempt; attempts open the execution detail.
+   ============================================================ */
+const ORDERS = [
+  { id:'1042', name:'Q2 IDE license refresh', vendorId:'acme', flow:'Bulk License Purchase', flowVer:'v7',
+    created:'2026-05-27', updated:'Today 14:32',
+    items:[ {name:'IntelliJ IDEA Ultimate', sku:'IIU-ANN', grad:'grad-indigo', qty:25},
+            {name:'Rider', sku:'RDR-ANN', grad:'grad-pink', qty:10} ],
+    attempts:[
+      {n:3, st:'warn', started:'Today 14:32',  dur:'02m 14s', steps:'9 / 13'},
+      {n:2, st:'err',  started:'May 28 11:04', dur:'00m 19s', steps:'4 / 13'},
+      {n:1, st:'err',  started:'May 27 16:40', dur:'00m 31s', steps:'6 / 13'},
+    ] },
+  { id:'1041', name:'Jira annual renewal', vendorId:'atlassian', flow:'Jira renewal', flowVer:'v3',
+    created:'2026-05-18', updated:'Today 14:18',
+    items:[ {name:'Jira Software', sku:'JIRA-STD', grad:'grad-cyan', qty:120} ],
+    attempts:[ {n:1, st:'run', started:'Today 14:18', dur:'running', steps:'7 / 12'} ] },
+  { id:'1040', name:'All Products Pack — design team', vendorId:'jetbrains', flow:'All Products Pack', flowVer:'v12',
+    created:'2026-05-10', updated:'May 12 13:55',
+    items:[ {name:'All Products Pack', sku:'APP-25', grad:'grad-pink', qty:25} ],
+    attempts:[ {n:1, st:'ok', started:'May 12 13:55', dur:'01m 02s', steps:'8 / 8'} ] },
+  { id:'1039', name:'Figma org seats top-up', vendorId:'figma', flow:'Org seats top-up', flowVer:'v2',
+    created:'2026-05-30', updated:'May 30 13:40',
+    items:[ {name:'Editor seat', sku:'FIG-ORG', grad:'grad-amber', qty:8} ],
+    attempts:[ {n:2, st:'ok',  started:'May 30 13:40', dur:'00m 48s', steps:'6 / 6'},
+               {n:1, st:'err', started:'May 30 13:31', dur:'00m 12s', steps:'2 / 6'} ] },
+  { id:'1037', name:'Copilot Business rollout', vendorId:'github', flow:'Copilot Business', flowVer:'v5',
+    created:'2026-05-02', updated:'May 2 11:30',
+    items:[ {name:'Copilot Business', sku:'CPL-BIZ', grad:'grad-green', qty:40} ],
+    attempts:[ {n:1, st:'ok', started:'May 2 11:30', dur:'01m 27s', steps:'5 / 5'} ] },
+  { id:'1043', name:'DataGrip seats — data team', vendorId:'acme', flow:'Seat top-up', flowVer:'v2',
+    created:'2026-06-01', updated:'Jun 1 09:12',
+    items:[ {name:'DataGrip', sku:'DG-ANN', grad:'grad-green', qty:5} ],
+    attempts:[] },
+];
+const OMAP = Object.fromEntries(ORDERS.map(o=>[o.id,o]));
+let curOrder = null, curAttempt = 1;
+
+const ORD_PILL = Object.assign({}, ST_PILL, { draft:['idle','file','Draft'] });
+const lastAttempt = o => o.attempts[0];
+const orderStatus = o => { const a=lastAttempt(o); return a?a.st:'draft'; };
+const totalQty    = o => o.items.reduce((s,i)=>s+i.qty,0);
+
+/* ----- orders list ----- */
+$('#orderRows').innerHTML = ORDERS.map(o=>{
+  const v = VMAP[o.vendorId]; const [cls,ic,lab] = ORD_PILL[orderStatus(o)];
+  return `<tr onclick="openOrder('${o.id}')">
+    <td><div style="display:flex;flex-direction:column;gap:3px"><span class="cell-strong">${o.name}</span><span class="id-chip" style="align-self:flex-start">order_${o.id}</span></div></td>
+    <td><div class="flow-cell"><span class="flow-ic ${v.tint}"><i data-lucide="${v.icon}"></i></span><span class="cell-strong">${v.name}</span></div></td>
+    <td>${o.items.length} <span class="cell-mut">· ${totalQty(o)} seats</span></td>
+    <td class="cell-mut">${o.flow} <span class="id-chip">${o.flowVer}</span></td>
+    <td><span class="pill ${cls}"><i data-lucide="${ic}"></i> ${lab}</span></td>
+    <td class="cell-mut mono">${o.updated}</td></tr>`;
+}).join('');
+
+/* ----- order detail ----- */
+function openOrder(id){ curOrder = OMAP[id]; renderOrderDetail(); go('order-detail'); }
+
+function renderOrderDetail(){
+  const o = curOrder, v = VMAP[o.vendorId];
+  const [cls,ic,lab] = ORD_PILL[orderStatus(o)];
+  $('#odName').textContent = o.name;
+  $('#odStatus').className = 'pill '+cls;
+  $('#odStatus').innerHTML = `<i data-lucide="${ic}"></i> ${lab}`;
+  $('#odId').textContent = 'order_'+o.id;
+  $('#odVendor').innerHTML = `<i data-lucide="${v.icon}" style="width:13px"></i> ${v.name}`;
+  $('#odFlow').textContent = `${o.flow} · ${o.flowVer}`;
+  $('#odCreated2').textContent = o.created;
+  $('#odVendorVal').textContent = v.name;
+  $('#odFlowVal').textContent = o.flow;
+  $('#odFlowVer').textContent = o.flowVer;
+  $('#odCreatedVal').textContent = o.created;
+  $('#odUpdatedVal').textContent = o.updated;
+  refreshSummaryQty();
+  renderCart();
+  renderAttempts();
+  lucide.createIcons();
+}
+function refreshSummaryQty(){
+  $('#odItemsVal').textContent = curOrder.items.length;
+  $('#odQtyVal').textContent = totalQty(curOrder);
+}
+
+function renderCart(){
+  const o = curOrder;
+  $('#cartCount').textContent = o.items.length;
+  $('#cartList').innerHTML = o.items.length ? o.items.map((it,i)=>`
+    <div class="cart-item">
+      <div class="cart-thumb ${it.grad}">${it.name.charAt(0)}</div>
+      <div class="cart-main"><h5>${it.name}</h5><span class="sku">${it.sku||'—'}</span></div>
+      <div class="qty">
+        <button onclick="bumpQty(${i},-1)" aria-label="Decrease quantity"><i data-lucide="minus"></i></button>
+        <input class="num" value="${it.qty}" onchange="setQty(${i}, this.value)" aria-label="Quantity" />
+        <button onclick="bumpQty(${i},1)" aria-label="Increase quantity"><i data-lucide="plus"></i></button>
+      </div>
+      <button class="icon-btn xs" title="Remove product" aria-label="Remove product" onclick="removeItem(${i})"><i data-lucide="trash-2"></i></button>
+    </div>`).join('')
+    : `<div class="card empty"><i data-lucide="shopping-cart" style="width:28px;height:28px;opacity:.5"></i><p style="margin-top:8px">No products in this order yet</p>
+       <button class="btn sm primary" style="margin-top:12px" onclick="openAddItem()"><i data-lucide="plus"></i> Add product</button></div>`;
+  $('#cartFoot').innerHTML = o.items.length
+    ? `<i data-lucide="package"></i> ${o.items.length} product${o.items.length===1?'':'s'} · ${totalQty(o)} seats total`
+    : '';
+  lucide.createIcons();
+}
+function bumpQty(i,d){ const it=curOrder.items[i]; it.qty=Math.max(1,it.qty+d); renderCart(); refreshSummaryQty(); }
+function setQty(i,val){ const n=parseInt(val,10); curOrder.items[i].qty=(isNaN(n)||n<1)?1:n; renderCart(); refreshSummaryQty(); }
+function removeItem(i){ curOrder.items.splice(i,1); renderCart(); refreshSummaryQty(); }
+
+function renderAttempts(){
+  const o = curOrder;
+  $('#attCount').textContent = o.attempts.length;
+  if(!o.attempts.length){
+    $('#attBody').innerHTML = `<div class="empty"><i data-lucide="history" style="width:28px;height:28px;opacity:.5"></i>
+      <p style="margin-top:8px">No execution attempts yet</p>
+      <button class="btn sm primary" style="margin-top:12px" onclick="executeOrder()"><i data-lucide="play"></i> Execute order</button></div>`;
+    lucide.createIcons(); return;
+  }
+  $('#attBody').innerHTML = `<table><thead><tr><th>Attempt</th><th>Status</th><th>Progress</th><th>Started</th><th>Duration</th><th></th></tr></thead><tbody>${
+    o.attempts.map(a=>{ const [cls,ic,lab]=ST_PILL[a.st]; return `<tr onclick="openExecution('${o.id}',${a.n})">
+      <td class="cell-strong">#${a.n}</td>
+      <td><span class="pill ${cls}"><i data-lucide="${ic}"></i> ${lab}</span></td>
+      <td class="mono cell-mut">${a.steps}</td>
+      <td class="cell-mut mono">${a.started}</td>
+      <td class="mono ${a.st==='run'?'':'cell-mut'}">${a.dur}</td>
+      <td style="text-align:right"><i data-lucide="chevron-right" style="width:16px;color:var(--text-3)"></i></td></tr>`; }).join('')
+  }</tbody></table>`;
+  lucide.createIcons();
+}
+
+/* ----- execution attempt → execution detail ----- */
+function openExecution(orderId, n){
+  if(orderId && OMAP[orderId]) curOrder = OMAP[orderId];
+  if(!curOrder) curOrder = ORDERS[0];
+  curAttempt = n || (lastAttempt(curOrder) ? lastAttempt(curOrder).n : 1);
+  const v = VMAP[curOrder.vendorId];
+  $('#execName').textContent = `${v.name} — ${curOrder.flow}`;
+  $('#execRunId').textContent = 'run_'+curOrder.id;
+  go('executions');
+}
+function executeOrder(){
+  const next = (lastAttempt(curOrder) ? lastAttempt(curOrder).n : 0) + 1;
+  curOrder.attempts.unshift({n:next, st:'run', started:'Just now', dur:'running', steps:'1 / 13'});
+  openExecution(curOrder.id, next);
+}
+
+/* ----- add product to order modal ----- */
+function openAddItem(){
+  const v = VMAP[curOrder.vendorId];
+  $('#addItemSub').textContent = v.name;
+  $('#aiProduct').innerHTML = v.products.map((p,i)=>`<option value="${i}">${p.name}</option>`).join('');
+  populateVariants();
+  $('#aiQty').value = 1;
+  $('#addItemModal').classList.add('open');
+  lucide.createIcons();
+  setTimeout(()=>$('#aiProduct').focus(),50);
+}
+function populateVariants(){
+  const v = VMAP[curOrder.vendorId];
+  const p = v.products[+$('#aiProduct').value] || {variants:[]};
+  const vs = p.variants || [];
+  $('#aiVariant').innerHTML = vs.length
+    ? vs.map(x=>`<option value="${esc(x.sku)}">${x.sku} — ${x.desc}</option>`).join('')
+    : `<option value="">— No variant —</option>`;
+}
+function addItemConfirm(){
+  const v = VMAP[curOrder.vendorId];
+  const p = v.products[+$('#aiProduct').value];
+  const qty = Math.max(1, parseInt($('#aiQty').value,10) || 1);
+  curOrder.items.push({ name:p.name, sku:$('#aiVariant').value||'—', grad:p.grad||'grad-indigo', qty });
+  closeAddItem(); renderCart(); refreshSummaryQty();
+}
+function closeAddItem(){ const m=$('#addItemModal'); if(m) m.classList.remove('open'); }
+$('#addItemModal').onclick = e => { if(e.target.id==='addItemModal') closeAddItem(); };
+
+window.openOrder=openOrder; window.openExecution=openExecution; window.executeOrder=executeOrder;
+window.openAddItem=openAddItem; window.populateVariants=populateVariants;
+window.addItemConfirm=addItemConfirm; window.closeAddItem=closeAddItem;
+window.bumpQty=bumpQty; window.setQty=setQty; window.removeItem=removeItem;
+
+const CREDS = [
+  ['cred:acme-login','Login','Acme DevTools','2 min ago'],
+  ['cred:corp-visa','Payment card','All vendors','14 min ago'],
+  ['cred:jb-account','Login','JetBrains','2 hours ago'],
+  ['cred:billing-addr','Billing profile','All vendors','2 hours ago'],
+];
+$('#credRows').innerHTML = CREDS.map(c=>`<tr>
+  <td class="flow-cell"><span class="flow-ic tint-green"><i data-lucide="key-round"></i></span><span class="param-tag"><b>${c[0]}</b></span></td>
+  <td>${c[1]}</td><td class="cell-mut">${c[2]}</td><td class="cell-mut mono">${c[3]}</td></tr>`).join('');
+
+/* expose go() for inline onclick */
+window.go = go;
+
+/* ============ init ============ */
+curOrder = OMAP['1042'];
+renderSteps();
+select(9);
+applyZoom();
+go('orders');
+lucide.createIcons();
+</script>
+</body>
+</html>
