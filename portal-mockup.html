@@ -1320,65 +1320,157 @@ tbody tr:hover .row-acts { opacity: 1; }
       </div></div>
     </section>
 
-  </div>
-</div>
+    <!-- ===================== PRODUCT DETAIL (editor page) ===================== -->
+    <section class="view" id="view-product-detail">
+      <div class="exec-head">
+        <button class="icon-btn back" title="Back to vendor" aria-label="Back to vendor" onclick="closeProduct()"><i data-lucide="arrow-left"></i></button>
+        <div class="exec-title">
+          <div class="row1">
+            <span class="flow-ic" id="pmIcon" style="width:30px;height:30px"><i data-lucide="package"></i></span>
+            <h2 id="pmTitle">Edit product</h2>
+            <span class="pill idle" id="pmActivePill"><span class="dot"></span> Active</span>
+          </div>
+          <div class="row2">
+            <i data-lucide="store" style="width:13px"></i><span id="pmSub">Vendor</span>
+          </div>
+        </div>
+        <div class="exec-actions">
+          <button class="btn sm danger" id="pmDelete" onclick="deleteProduct()"><i data-lucide="trash-2"></i> Delete</button>
+          <button class="btn sm" onclick="closeProduct()">Cancel</button>
+          <button class="btn sm primary" onclick="saveProduct()"><i data-lucide="check"></i> Save product</button>
+        </div>
+      </div>
 
-<!-- ===================== PRODUCT EDITOR MODAL ===================== -->
-<div class="modal-scrim" id="prodModal" role="dialog" aria-modal="true" aria-labelledby="pmTitle">
-  <div class="modal">
-    <div class="modal-head">
-      <span class="mh-ic" id="pmIcon"><i data-lucide="package"></i></span>
-      <div><h3 id="pmTitle">Edit product</h3><div class="sub" id="pmSub">Acme DevTools</div></div>
-      <button class="icon-btn" title="Close" aria-label="Close" onclick="closeProduct()"><i data-lucide="x"></i></button>
-    </div>
-    <div class="modal-body">
-      <div class="fld">
-        <label>Image</label>
-        <div class="dropzone">
-          <div class="dz-thumb" id="pmThumb"><span>A</span></div>
-          <div class="dz-main">
-            <b>Product image</b>
-            <p>PNG, JPG or SVG · up to 2 MB · shown on the product card</p>
-            <div class="dz-actions">
-              <button class="btn sm"><i data-lucide="upload"></i> Upload</button>
-              <button class="btn sm ghost"><i data-lucide="trash-2"></i> Remove</button>
+      <div class="scroll"><div class="pad">
+        <div class="vd-grid">
+          <!-- LEFT: image + basics -->
+          <div class="card card-pad">
+            <div class="section-head"><h3>Product details</h3></div>
+            <div class="fld">
+              <label>Image</label>
+              <div class="dropzone">
+                <div class="dz-thumb" id="pmThumb"><span>A</span></div>
+                <div class="dz-main">
+                  <b>Product image</b>
+                  <p>PNG, JPG or SVG · up to 2 MB · shown on the product card</p>
+                  <div class="dz-actions">
+                    <button class="btn sm"><i data-lucide="upload"></i> Upload</button>
+                    <button class="btn sm ghost"><i data-lucide="trash-2"></i> Remove</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="fld">
+              <label for="pmName">Name <span class="req">*</span></label>
+              <input class="input" id="pmName" placeholder="e.g. IntelliJ IDEA Ultimate" oninput="onProductNameInput(this.value)" />
+            </div>
+            <div class="fld">
+              <label for="pmFlow">Assigned flow</label>
+              <select class="input" id="pmFlow"></select>
+              <span class="help"><i data-lucide="git-branch"></i> The automation run when this product is purchased</span>
+            </div>
+            <div class="fld" style="margin-bottom:0">
+              <label>Active</label>
+              <div class="fld-row">
+                <span class="help" style="margin:0"><i data-lucide="power"></i> Available for selection in runs</span>
+                <label class="switch"><input type="checkbox" id="pmActive" checked onchange="syncProductActive()"><span class="track"></span></label>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: variants + custom fields -->
+          <div class="card card-pad">
+            <div class="section-head"><h3>Variants &amp; fields</h3></div>
+            <div class="fld">
+              <label>Variants <span class="cell-mut" style="font-weight:500">· purchasable SKUs for this product</span></label>
+              <div id="pmVariants"></div>
+              <button class="btn sm ghost" style="margin-top:6px" onclick="addVarRow('pmVariants')"><i data-lucide="plus"></i> Add variant</button>
+            </div>
+            <div class="fld" style="margin-bottom:0">
+              <label>Custom fields <span class="cell-mut" style="font-weight:500">· stored as FieldsJson</span></label>
+              <div id="pmFields"></div>
+              <button class="btn sm ghost" style="margin-top:6px" onclick="addKvRow('pmFields')"><i data-lucide="plus"></i> Add field</button>
             </div>
           </div>
         </div>
-      </div>
-      <div class="fld">
-        <label for="pmName">Name <span class="req">*</span></label>
-        <input class="input" id="pmName" placeholder="e.g. IntelliJ IDEA Ultimate" />
-      </div>
-      <div class="fld">
-        <label for="pmFlow">Assigned flow</label>
-        <select class="input" id="pmFlow"></select>
-        <span class="help"><i data-lucide="git-branch"></i> The automation run when this product is purchased</span>
-      </div>
-      <div class="fld">
-        <label>Active</label>
-        <div class="fld-row">
-          <span class="help" style="margin:0"><i data-lucide="power"></i> Available for selection in runs</span>
-          <label class="switch"><input type="checkbox" id="pmActive" checked><span class="track"></span></label>
+      </div></div>
+    </section>
+
+    <!-- ===================== USER DETAIL (editor page) ===================== -->
+    <section class="view" id="view-user-detail">
+      <div class="exec-head">
+        <button class="icon-btn back" title="Back to users" aria-label="Back to users" onclick="closeUser()"><i data-lucide="arrow-left"></i></button>
+        <div class="exec-title">
+          <div class="row1">
+            <span class="flow-ic tint-indigo" id="umHeadIcon" style="width:30px;height:30px"><i data-lucide="user-plus"></i></span>
+            <h2 id="umTitle">Add user</h2>
+          </div>
+          <div class="row2">
+            <span id="umSub">Invite someone to this workspace</span>
+          </div>
+        </div>
+        <div class="exec-actions">
+          <button class="btn sm danger" id="umDelete" onclick="askDeleteUser()"><i data-lucide="trash-2"></i> Remove</button>
+          <button class="btn sm" onclick="closeUser()">Cancel</button>
+          <button class="btn sm primary" onclick="saveUser()"><i data-lucide="check"></i> <span id="umSaveLabel">Send invite</span></button>
         </div>
       </div>
-      <div class="fld">
-        <label>Variants <span class="cell-mut" style="font-weight:500">· purchasable SKUs for this product</span></label>
-        <div id="pmVariants"></div>
-        <button class="btn sm ghost" style="margin-top:6px" onclick="addVarRow('pmVariants')"><i data-lucide="plus"></i> Add variant</button>
-      </div>
-      <div class="fld">
-        <label>Custom fields <span class="cell-mut" style="font-weight:500">· stored as FieldsJson</span></label>
-        <div id="pmFields"></div>
-        <button class="btn sm ghost" style="margin-top:6px" onclick="addKvRow('pmFields')"><i data-lucide="plus"></i> Add field</button>
-      </div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn danger" id="pmDelete"><i data-lucide="trash-2"></i> Delete</button>
-      <span class="spacer"></span>
-      <button class="btn ghost" onclick="closeProduct()">Cancel</button>
-      <button class="btn primary" onclick="saveProduct()"><i data-lucide="check"></i> Save product</button>
-    </div>
+
+      <div class="scroll"><div class="pad" style="max-width:900px">
+        <div class="alert err" id="umErr" role="alert" aria-live="polite" style="display:none"><i data-lucide="alert-triangle"></i><div id="umErrMsg"></div></div>
+        <div class="vd-grid">
+          <!-- LEFT: avatar + identity -->
+          <div class="card card-pad">
+            <div class="section-head"><h3>Identity</h3></div>
+            <div class="fld">
+              <label>Avatar</label>
+              <div class="dropzone">
+                <div class="dz-thumb round grad-indigo" id="umThumb"><span>?</span></div>
+                <div class="dz-main">
+                  <b>Profile photo</b>
+                  <p>Optional · PNG or JPG up to 1 MB · falls back to initials</p>
+                  <div class="dz-actions">
+                    <button class="btn sm" type="button"><i data-lucide="upload"></i> Upload</button>
+                    <button class="btn sm ghost" type="button"><i data-lucide="trash-2"></i> Remove</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="fld">
+              <label for="umName">Full name <span class="req">*</span></label>
+              <input class="input" id="umName" placeholder="e.g. Marta Kovács" autocomplete="name" oninput="onUserNameInput()" />
+            </div>
+            <div class="fld" style="margin-bottom:0">
+              <label for="umEmail">Email <span class="req">*</span></label>
+              <input class="input mono" id="umEmail" type="email" autocomplete="email" placeholder="name@vinosoft.com" />
+              <span class="help"><i data-lucide="mail"></i> Sign-in identity and where the invitation is sent</span>
+            </div>
+          </div>
+
+          <!-- RIGHT: role + status -->
+          <div class="card card-pad">
+            <div class="section-head"><h3>Access</h3></div>
+            <div class="fld">
+              <label>Role <span class="req">*</span></label>
+              <div class="seg role-seg" id="umRole" role="radiogroup" aria-label="Role">
+                <button type="button" data-role="admin" role="radio" aria-checked="false" onclick="setUserRole('admin')"><i data-lucide="shield"></i> Admin</button>
+                <button type="button" data-role="user" role="radio" aria-checked="true" onclick="setUserRole('user')"><i data-lucide="user"></i> User</button>
+              </div>
+              <div class="role-help" id="umRoleHelp"><i data-lucide="info"></i> <span></span></div>
+            </div>
+            <div class="fld" style="margin-bottom:0">
+              <label for="umStatus">Status</label>
+              <select class="input" id="umStatus">
+                <option value="invited">Invited — invitation sent, not yet accepted</option>
+                <option value="active">Active — can sign in</option>
+                <option value="disabled">Disabled — access revoked</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div></div>
+    </section>
+
   </div>
 </div>
 
@@ -1408,70 +1500,6 @@ tbody tr:hover .row-acts { opacity: 1; }
       <span class="spacer"></span>
       <button class="btn ghost" onclick="closeAddItem()">Cancel</button>
       <button class="btn primary" onclick="addItemConfirm()"><i data-lucide="plus"></i> Add to order</button>
-    </div>
-  </div>
-</div>
-
-<!-- ===================== USER EDITOR MODAL ===================== -->
-<div class="modal-scrim" id="userModal" role="dialog" aria-modal="true" aria-labelledby="umTitle">
-  <div class="modal" style="width:min(480px,100%)">
-    <div class="modal-head">
-      <span class="mh-ic tint-indigo" id="umHeadIcon"><i data-lucide="user-plus"></i></span>
-      <div><h3 id="umTitle">Add user</h3><div class="sub" id="umSub">Invite someone to this workspace</div></div>
-      <button class="icon-btn" title="Close" aria-label="Close" onclick="closeUser()"><i data-lucide="x"></i></button>
-    </div>
-    <div class="modal-body">
-      <div class="alert err" id="umErr" role="alert" aria-live="polite" style="display:none"><i data-lucide="alert-triangle"></i><div id="umErrMsg"></div></div>
-
-      <div class="fld">
-        <label>Avatar</label>
-        <div class="dropzone">
-          <div class="dz-thumb round grad-indigo" id="umThumb"><span>?</span></div>
-          <div class="dz-main">
-            <b>Profile photo</b>
-            <p>Optional · PNG or JPG up to 1 MB · falls back to initials</p>
-            <div class="dz-actions">
-              <button class="btn sm" type="button"><i data-lucide="upload"></i> Upload</button>
-              <button class="btn sm ghost" type="button"><i data-lucide="trash-2"></i> Remove</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="fld">
-        <label for="umName">Full name <span class="req">*</span></label>
-        <input class="input" id="umName" placeholder="e.g. Marta Kovács" autocomplete="name" oninput="syncUserThumb()" />
-      </div>
-
-      <div class="fld">
-        <label for="umEmail">Email <span class="req">*</span></label>
-        <input class="input mono" id="umEmail" type="email" autocomplete="email" placeholder="name@vinosoft.com" />
-        <span class="help"><i data-lucide="mail"></i> Sign-in identity and where the invitation is sent</span>
-      </div>
-
-      <div class="fld">
-        <label>Role <span class="req">*</span></label>
-        <div class="seg role-seg" id="umRole" role="radiogroup" aria-label="Role">
-          <button type="button" data-role="admin" role="radio" aria-checked="false" onclick="setUserRole('admin')"><i data-lucide="shield"></i> Admin</button>
-          <button type="button" data-role="user" role="radio" aria-checked="true" onclick="setUserRole('user')"><i data-lucide="user"></i> User</button>
-        </div>
-        <div class="role-help" id="umRoleHelp"><i data-lucide="info"></i> <span></span></div>
-      </div>
-
-      <div class="fld" style="margin-bottom:0">
-        <label for="umStatus">Status</label>
-        <select class="input" id="umStatus">
-          <option value="invited">Invited — invitation sent, not yet accepted</option>
-          <option value="active">Active — can sign in</option>
-          <option value="disabled">Disabled — access revoked</option>
-        </select>
-      </div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn danger" id="umDelete" onclick="askDeleteUser()"><i data-lucide="trash-2"></i> Remove</button>
-      <span class="spacer"></span>
-      <button class="btn ghost" onclick="closeUser()">Cancel</button>
-      <button class="btn primary" onclick="saveUser()"><i data-lucide="check"></i> <span id="umSaveLabel">Send invite</span></button>
     </div>
   </div>
 </div>
@@ -1676,25 +1704,30 @@ const CRUMB = {
 /* breadcrumb parts per view — last entry is the current (bold) page */
 function crumbParts(view){
   if(view==='vendor-detail') return [{l:'Vendors',v:'vendors'},{l:curVendor?curVendor.name:'Vendor'}];
+  if(view==='product-detail')return [{l:'Vendors',v:'vendors'},{l:curVendor?curVendor.name:'Vendor',v:'vendor-detail'},{l:curProdName||'Product'}];
   if(view==='order-detail')  return [{l:'Orders',v:'orders'},{l:curOrder?curOrder.name:'Order'}];
   if(view==='executions')    return [{l:'Orders',v:'orders'},{l:curOrder?curOrder.name:'Order',v:'order-detail'},{l:'Run #'+curAttempt}];
   if(view==='builder')       return [{l:'Scripts',v:'scripts'},{l:curScript?curScript.name:'Script'}];
+  if(view==='user-detail')   return [{l:'Users',v:'users'},{l:curUserName||'User'}];
   return CRUMB[view].map(l=>({l}));
 }
 function go(view){
   let navTarget = view;
-  if(view==='vendor-detail') navTarget='vendors';
+  if(view==='vendor-detail'||view==='product-detail') navTarget='vendors';
   if(view==='order-detail'||view==='executions') navTarget='orders';
+  if(view==='user-detail') navTarget='users';
   if(view==='builder') navTarget='scripts';
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.view===navTarget));
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   $('#view-'+view).classList.add('active');
   const parts = crumbParts(view);
   $('#crumbs').innerHTML = parts.map((p,i)=> i===parts.length-1
-    ? `<b>${p.l}</b>`
-    : `<span style="cursor:pointer" onclick="go('${p.v}')">${p.l}</span><i data-lucide="chevron-right"></i>`).join('');
+    ? `<b>${tx(p.l)}</b>`
+    : `<span style="cursor:pointer" onclick="go('${p.v}')">${tx(p.l)}</span><i data-lucide="chevron-right"></i>`).join('');
   lucide.createIcons();
 }
+/* update just the current (bold) breadcrumb as the user types a name */
+function setCrumbTail(text){ const b = document.querySelector('#crumbs b'); if(b) b.textContent = text; }
 document.querySelectorAll('.nav-item').forEach(n=>n.onclick=()=>go(n.dataset.view));
 
 /* ============ theme ============ */
@@ -1815,7 +1848,7 @@ $('#vendorRows').innerHTML = VENDORS.map(v=>`<tr onclick="openVendor('${v.id}')"
   <td><span style="display:inline-flex;align-items:center;gap:10px"><span class="pill ${v.status}"><span class="dot"></span> ${v.status==='ok'?'Healthy':'Review'}</span><i data-lucide="chevron-right" style="width:16px;color:var(--text-3)"></i></span></td></tr>`).join('');
 
 /* ===== vendor detail + product modal ===== */
-let curVendor = null, curProd = -1;
+let curVendor = null, curProd = -1, curProdName = '';
 const esc = s => (s==null?'':String(s).replace(/"/g,'&quot;'));
 
 function kvRowsHTML(arr){
@@ -1949,9 +1982,11 @@ function openProduct(i){
   curProd = i;
   const v = curVendor;
   const p = i>=0 ? v.products[i] : {name:'',flow:'',active:true,grad:'grad-indigo',fields:[],variants:[]};
+  curProdName = i>=0 ? (p.name||'Product') : 'New product';
   $('#pmTitle').textContent = i>=0 ? 'Edit product' : 'New product';
   $('#pmSub').textContent = v.name;
-  $('#pmIcon').className = 'mh-ic '+v.tint;
+  $('#pmIcon').className = 'flow-ic '+v.tint; $('#pmIcon').style.cssText='width:30px;height:30px';
+  $('#pmIcon').innerHTML = '<i data-lucide="package"></i>';
   $('#pmName').value = p.name;
   $('#pmFlow').innerHTML = flowOptions(p.flow);
   $('#pmActive').checked = p.active;
@@ -1961,11 +1996,34 @@ function openProduct(i){
   thumb.className = 'dz-thumb '+(p.grad||'grad-indigo');
   thumb.innerHTML = p.img?`<img src="${p.img}" alt=""/>`:`<span>${(p.name||'?').charAt(0)||'?'}</span>`;
   $('#pmDelete').style.display = i>=0 ? '' : 'none';
-  $('#prodModal').classList.add('open');
+  syncProductActive();
+  go('product-detail');
   lucide.createIcons();
   setTimeout(()=>$('#pmName').focus(),50);
 }
-function closeProduct(){ $('#prodModal').classList.remove('open'); }
+function syncProductActive(){
+  const on = $('#pmActive').checked;
+  const pill = $('#pmActivePill');
+  pill.className = 'pill ' + (on?'ok':'idle');
+  pill.innerHTML = `<span class="dot"></span> ${on?'Active':'Inactive'}`;
+}
+function onProductNameInput(val){
+  curProdName = val || 'New product';
+  setCrumbTail(curProdName);
+  const t = $('#pmThumb');
+  if(t && !t.querySelector('img')) t.innerHTML = `<span>${(val||'?').charAt(0)||'?'}</span>`;
+}
+function deleteProduct(){
+  if(curProd<0){ closeProduct(); return; }
+  const v = curVendor, idx = curProd, p = v.products[idx];
+  confirmAction({
+    title:'Delete product',
+    message:`Delete <b>${tx(p?p.name:'this product')}</b>? It will be removed from ${tx(v.name)}. This can't be undone.`,
+    confirmLabel:'Delete product',
+    onConfirm:()=>{ v.products.splice(idx,1); $('#vdProdCount').textContent = v.products.length+' products'; renderProducts(); go('vendor-detail'); }
+  });
+}
+function closeProduct(){ go('vendor-detail'); }
 function readKv(id){
   return [...$('#'+id).querySelectorAll('.kv-row')].map(r=>{
     const [k,val]=r.querySelectorAll('input'); return {k:k.value,v:val.value};
@@ -1985,10 +2043,10 @@ function saveProduct(){
   renderProducts();
   closeProduct();
 }
-$('#prodModal').onclick = e => { if(e.target.id==='prodModal') closeProduct(); };
-document.addEventListener('keydown', e => { if(e.key==='Escape'){ closeProduct(); closeAddItem(); } });
+document.addEventListener('keydown', e => { if(e.key==='Escape'){ closeAddItem(); } });
 window.openVendor = openVendor; window.openProduct = openProduct;
 window.closeProduct = closeProduct; window.saveProduct = saveProduct; window.addKvRow = addKvRow;
+window.deleteProduct = deleteProduct; window.syncProductActive = syncProductActive; window.onProductNameInput = onProductNameInput;
 
 /* ============================================================
    ORDERS — a cart of products from a vendor, run by a flow.
@@ -2190,7 +2248,7 @@ let USERS = [
   { id:'u4', name:'Priya Nair',     email:'priya.nair@vinosoft.com',         role:'user',  status:'invited',  last:'—',           grad:'grad-amber' },
   { id:'u5', name:'Tomáš Horák',    email:'tomas.horak@vinosoft.com',        role:'user',  status:'disabled', last:'Mar 18',      grad:'grad-cyan' },
 ];
-let curUser = -1, pendingDelete = null, _ucnt = 5;
+let curUser = -1, pendingDelete = null, _ucnt = 5, curUserName = '';
 
 const ROLE_PILL   = { admin:['admin','shield','Admin'], user:['idle','user','User'] };
 const USTAT_PILL  = { active:['ok','check-circle-2','Active'], invited:['warn','mail','Invited'], disabled:['idle','ban','Disabled'] };
@@ -2252,6 +2310,7 @@ function openUser(id){
   const u = isNew
     ? { name:'', email:'', role:'user', status:'invited', grad:'grad-indigo' }
     : USERS.find(x=>x.id===id);
+  curUserName = isNew ? 'Add user' : (u.you ? 'Your profile' : (u.name || 'User'));
   $('#umTitle').textContent = isNew ? 'Add user' : (u.you ? 'Edit your profile' : 'Edit user');
   $('#umSub').textContent   = isNew ? 'Invite someone to this workspace' : tx(u.email);
   $('#umHeadIcon').innerHTML = `<i data-lucide="${isNew?'user-plus':'user-cog'}"></i>`;
@@ -2262,11 +2321,16 @@ function openUser(id){
   $('#umSaveLabel').textContent = isNew ? 'Send invite' : 'Save changes';
   $('#umDelete').style.display = isNew ? 'none' : '';
   syncUserThumb();
-  $('#userModal').classList.add('open');
+  go('user-detail');
   lucide.createIcons();
   setTimeout(()=>$('#umName').focus(),50);
 }
-function closeUser(){ $('#userModal').classList.remove('open'); }
+function onUserNameInput(){
+  syncUserThumb();
+  curUserName = $('#umName').value || (curUser===-1 ? 'Add user' : 'User');
+  setCrumbTail(curUserName);
+}
+function closeUser(){ go('users'); }
 
 function saveUser(){
   const name = $('#umName').value.trim();
@@ -2295,38 +2359,44 @@ function saveUser(){
   renderUsers();
 }
 
-/* delete with confirmation + last-admin / self guards */
-function askDeleteUser(id){
-  const targetId = id || curUser;
-  const u = USERS.find(x=>x.id===targetId);
-  if(!u) return;
-  if(u.you){ if(curUser!==-1){ showUserErr('You can\'t remove your own account.'); } else { alert('You can\'t remove your own account.'); } return; }
-  if(u.role==='admin' && adminCount()===1){
-    const m = 'This is the only Admin — promote another user before removing them.';
-    if(curUser!==-1) showUserErr(m); else alert(m);
-    return;
-  }
-  pendingDelete = targetId;
-  $('#cfMsg').innerHTML = `Remove <b>${tx(u.name)}</b> (${tx(u.email)})? They'll lose access immediately. This can't be undone.`;
+/* generic confirm dialog — kept as a modal (confirmations are the right place for one) */
+let _confirmCb = null;
+function confirmAction({title, message, confirmLabel, icon='trash-2', onConfirm}){
+  $('#cfTitle').textContent = title;
+  $('#cfMsg').innerHTML = message;
+  $('#cfConfirm').innerHTML = `<i data-lucide="${icon}"></i> ${confirmLabel}`;
+  _confirmCb = onConfirm || null;
   $('#confirmModal').classList.add('open');
   lucide.createIcons();
 }
-function closeConfirm(){ $('#confirmModal').classList.remove('open'); pendingDelete=null; }
-$('#cfConfirm').onclick = ()=>{
-  if(pendingDelete){
-    USERS = USERS.filter(u=>u.id!==pendingDelete);
-    renderUsers();
-  }
-  closeConfirm();
-  closeUser();
-};
+function closeConfirm(){ $('#confirmModal').classList.remove('open'); _confirmCb=null; pendingDelete=null; }
+$('#cfConfirm').onclick = ()=>{ const cb=_confirmCb; closeConfirm(); if(cb) cb(); };
 
-$('#userModal').onclick = e => { if(e.target.id==='userModal') closeUser(); };
+/* delete with confirmation + last-admin / self guards */
+function askDeleteUser(id){
+  const fromDetail = !id;                 // no id ⇒ invoked from the user-detail page
+  const targetId = id || curUser;
+  const u = USERS.find(x=>x.id===targetId);
+  if(!u) return;
+  if(u.you){ if(fromDetail) showUserErr('You can\'t remove your own account.'); else alert('You can\'t remove your own account.'); return; }
+  if(u.role==='admin' && adminCount()===1){
+    const m = 'This is the only Admin — promote another user before removing them.';
+    if(fromDetail) showUserErr(m); else alert(m);
+    return;
+  }
+  confirmAction({
+    title:'Remove user',
+    message:`Remove <b>${tx(u.name)}</b> (${tx(u.email)})? They'll lose access immediately. This can't be undone.`,
+    confirmLabel:'Remove user',
+    onConfirm:()=>{ USERS = USERS.filter(x=>x.id!==targetId); renderUsers(); if(fromDetail) go('users'); }
+  });
+}
+
 $('#confirmModal').onclick = e => { if(e.target.id==='confirmModal') closeConfirm(); };
-document.addEventListener('keydown', e => { if(e.key==='Escape'){ closeUser(); closeConfirm(); } });
+document.addEventListener('keydown', e => { if(e.key==='Escape'){ closeConfirm(); } });
 
 window.openUser=openUser; window.closeUser=closeUser; window.saveUser=saveUser;
-window.setUserRole=setUserRole; window.syncUserThumb=syncUserThumb;
+window.setUserRole=setUserRole; window.syncUserThumb=syncUserThumb; window.onUserNameInput=onUserNameInput;
 window.askDeleteUser=askDeleteUser; window.closeConfirm=closeConfirm;
 
 /* ============================================================
