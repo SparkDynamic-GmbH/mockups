@@ -528,6 +528,33 @@ select.input { appearance: none; -webkit-appearance: none; cursor: pointer; padd
 .var-row { display: grid; grid-template-columns: 150px 1fr auto; gap: var(--sp-2); margin-bottom: var(--sp-2); align-items: start; }
 .var-row .input { padding: 8px 10px; }
 
+/* credentials block (one sign-in set per vendor) */
+.cred-note {
+  display: flex; align-items: flex-start; gap: var(--sp-2);
+  font-size: 11.5px; color: var(--text-2); line-height: 1.5;
+  background: var(--ok-soft); border: 1px solid color-mix(in srgb, var(--ok) 26%, transparent);
+  border-radius: var(--r-md); padding: 9px 11px; margin-bottom: var(--sp-4);
+}
+.cred-note svg { width: 15px; height: 15px; color: var(--ok); flex: none; margin-top: 1px; }
+.cred-note b { color: var(--text); font-weight: 600; }
+
+.pw-wrap { position: relative; }
+.pw-wrap .input { padding-right: 42px; }
+.pw-toggle {
+  position: absolute; top: 50%; right: 6px; transform: translateY(-50%);
+  width: 30px; height: 30px; display: grid; place-items: center;
+  border: none; background: none; color: var(--text-3); cursor: pointer; border-radius: 6px;
+  transition: background .12s, color .12s;
+}
+.pw-toggle:hover { background: var(--surface-2); color: var(--text); }
+.pw-toggle svg { width: 16px; height: 16px; }
+
+.cred-ref {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 6px;
+  font-family: var(--font-mono); font-size: 11.5px; color: var(--text-3);
+}
+.cred-ref svg { width: 13px; height: 13px; }
+
 /* meta list */
 .meta-list { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4) var(--sp-3); margin-top: var(--sp-4); padding-top: var(--sp-4); border-top: 1px solid var(--border); }
 .meta-list .mi .l { font-size: 11px; color: var(--text-3); display: flex; align-items: center; gap: 5px; }
@@ -1004,7 +1031,8 @@ select.input { appearance: none; -webkit-appearance: none; cursor: pointer; padd
 
       <div class="scroll"><div class="pad">
         <div class="vd-grid">
-          <!-- LEFT: vendor form -->
+          <!-- LEFT: vendor form + credentials -->
+          <div class="order-col">
           <div class="card card-pad">
             <div class="section-head"><h3>Vendor details</h3></div>
             <div class="fld">
@@ -1030,6 +1058,33 @@ select.input { appearance: none; -webkit-appearance: none; cursor: pointer; padd
               <div class="mi"><div class="l"><i data-lucide="shopping-cart"></i> Orders</div><div class="val num" id="vdOrders">0</div></div>
               <div class="mi"><div class="l"><i data-lucide="git-branch"></i> Flows</div><div class="val num" id="vdFlows2">0</div></div>
             </div>
+          </div>
+
+          <!-- LEFT: vendor credentials (one sign-in set per vendor) -->
+          <div class="card card-pad">
+            <div class="section-head">
+              <h3>Credentials</h3>
+              <span class="pill ok" id="vcStatus"><span class="dot"></span> Verified</span>
+              <div class="actions"><button class="btn sm ghost" onclick="testCred()"><i data-lucide="plug-zap"></i> Test sign-in</button></div>
+            </div>
+            <div class="cred-note">
+              <i data-lucide="shield-check"></i>
+              <div><b>One sign-in account per vendor.</b> Used by every flow that purchases from this vendor. The password is held in Windows Credential Manager — never written to the database or scripts.</div>
+            </div>
+            <div class="fld">
+              <label for="vcEmail">Email <span class="req">*</span></label>
+              <input class="input mono" id="vcEmail" type="email" autocomplete="username" placeholder="account@vendor.com" />
+            </div>
+            <div class="fld" style="margin-bottom:0">
+              <label for="vcPass">Password <span class="req">*</span></label>
+              <div class="pw-wrap">
+                <input class="input mono" id="vcPass" type="password" autocomplete="current-password" placeholder="••••••••••••" />
+                <button class="pw-toggle" id="vcReveal" type="button" title="Show password" aria-label="Show password" aria-pressed="false" onclick="toggleCred()"><i data-lucide="eye"></i></button>
+              </div>
+              <span class="cred-ref"><i data-lucide="key-round"></i> <span id="vcRef">cwwsecret://vendor/login</span></span>
+              <span class="help"><i data-lucide="calendar-clock"></i> Secret updated <span id="vcUpdated" class="mono">—</span></span>
+            </div>
+          </div>
           </div>
 
           <!-- RIGHT: products -->
@@ -1399,6 +1454,7 @@ $('#paramRows').innerHTML = PARAMS.map(p=>`<tr>
 const VENDORS = [
   { id:'acme', name:'Acme DevTools', icon:'store', tint:'tint-indigo', status:'ok',
     created:'2025-11-02', updated:'2026-05-28', orders:142,
+    cred:{ email:'licensing@vinosoft.com', pass:'Acme!Dev-2026$7q', ref:'cwwsecret://acme-devtools/login', updated:'2026-05-20', verified:true },
     fields:[{k:'Domain',v:'acme-devtools.com'},{k:'CAPTCHA strategy',v:'CloakBrowser → Human'},{k:'Login URL',v:'https://acme-devtools.com/login'}],
     flows:['Bulk License Purchase','Seat top-up','Invoice export'],
     products:[
@@ -1410,6 +1466,7 @@ const VENDORS = [
     ] },
   { id:'atlassian', name:'Atlassian', icon:'square-stack', tint:'tint-green', status:'ok',
     created:'2025-09-18', updated:'2026-05-12', orders:87,
+    cred:{ email:'procurement@vinosoft.com', pass:'Atl@ssian-9mK#2', ref:'cwwsecret://atlassian/login', updated:'2026-04-11', verified:true },
     fields:[{k:'Domain',v:'atlassian.com'},{k:'CAPTCHA strategy',v:'CloakBrowser'}],
     flows:['Jira renewal','Confluence renewal'],
     products:[
@@ -1418,6 +1475,7 @@ const VENDORS = [
     ] },
   { id:'jetbrains', name:'JetBrains', icon:'package', tint:'tint-pink', status:'ok',
     created:'2025-12-01', updated:'2026-04-30', orders:54,
+    cred:{ email:'devtools@vinosoft.com', pass:'JetBr@ins-2026!', ref:'cwwsecret://jetbrains/login', updated:'2026-03-28', verified:true },
     fields:[{k:'Domain',v:'jetbrains.com'},{k:'CAPTCHA strategy',v:'CloakBrowser'}],
     flows:['All Products Pack'],
     products:[
@@ -1425,6 +1483,7 @@ const VENDORS = [
     ] },
   { id:'figma', name:'Figma', icon:'figma', tint:'tint-amber', status:'warn',
     created:'2026-01-22', updated:'2026-05-30', orders:31,
+    cred:{ email:'design-ops@vinosoft.com', pass:'Figm@-Org-5xR2', ref:'cwwsecret://figma/login', updated:'2026-02-09', verified:false },
     fields:[{k:'Domain',v:'figma.com'},{k:'CAPTCHA strategy',v:'Human only'}],
     flows:['Org seats top-up'],
     products:[
@@ -1433,6 +1492,7 @@ const VENDORS = [
     ] },
   { id:'github', name:'GitHub', icon:'github', tint:'tint-indigo', status:'ok',
     created:'2025-10-09', updated:'2026-03-15', orders:60,
+    cred:{ email:'platform@vinosoft.com', pass:'GitHub-C0pilot!26', ref:'cwwsecret://github/login', updated:'2026-03-15', verified:true },
     fields:[{k:'Domain',v:'github.com'},{k:'CAPTCHA strategy',v:'None needed'}],
     flows:['Copilot Business'],
     products:[
@@ -1512,12 +1572,44 @@ function openVendor(id){
   $('#vfName').value = v.name;
   $('#vfActive').checked = v.status!=='off';
   $('#vfFields').innerHTML = kvRowsHTML(v.fields);
+  // credentials (one sign-in set per vendor)
+  const c = v.cred || {email:'',pass:'',ref:'',updated:'—',verified:false};
+  $('#vcEmail').value = c.email;
+  const pw = $('#vcPass'); pw.value = c.pass; pw.type = 'password';
+  const rev = $('#vcReveal'); rev.setAttribute('aria-pressed','false'); rev.title='Show password'; rev.setAttribute('aria-label','Show password');
+  rev.innerHTML = '<i data-lucide="eye"></i>';
+  $('#vcRef').textContent = c.ref;
+  $('#vcUpdated').textContent = c.updated;
+  $('#vcStatus').className = 'pill '+(c.verified?'ok':'warn');
+  $('#vcStatus').innerHTML = `<span class="dot"></span> ${c.verified?'Verified':'Not verified'}`;
   $('#vdCreated').textContent = v.created;
   $('#vdUpdated').textContent = v.updated;
   $('#vdOrders').textContent = v.orders;
   $('#vdFlows2').textContent = v.flows.length;
   renderProducts();
   go('vendor-detail');
+}
+
+function toggleCred(){
+  const pw = $('#vcPass'), rev = $('#vcReveal');
+  const show = pw.type === 'password';
+  pw.type = show ? 'text' : 'password';
+  rev.setAttribute('aria-pressed', String(show));
+  rev.title = show ? 'Hide password' : 'Show password';
+  rev.setAttribute('aria-label', rev.title);
+  rev.innerHTML = `<i data-lucide="${show ? 'eye-off' : 'eye'}"></i>`;
+  lucide.createIcons();
+}
+function testCred(){
+  const s = $('#vcStatus');
+  s.className = 'pill run';
+  s.innerHTML = `<span class="dot pulse"></span> Testing…`;
+  lucide.createIcons();
+  setTimeout(()=>{
+    s.className = 'pill ok';
+    s.innerHTML = `<span class="dot"></span> Verified`;
+    if(curVendor && curVendor.cred) curVendor.cred.verified = true;
+  }, 1200);
 }
 
 function renderProducts(){
