@@ -789,6 +789,79 @@ tbody tr:hover .row-acts { opacity: 1; }
 /* error alert variant (form-level lockout guards) */
 .alert.err { background: var(--err-soft); color: var(--err); border: 1px solid color-mix(in srgb,var(--err) 26%,transparent); }
 .alert.err b { color: var(--text); }
+
+/* ============================================================
+   BROWSERS — Chrome instances in the Docker pool (master/detail)
+   ============================================================ */
+.bi-layout { display: grid; grid-template-columns: 344px 1fr; gap: var(--sp-5); align-items: start; }
+@media (max-width: 1100px) { .bi-layout { grid-template-columns: 1fr; } }
+
+/* left: instance list */
+.binst-list { display: flex; flex-direction: column; gap: var(--sp-3); }
+.binst {
+  text-align: left; width: 100%; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); box-shadow: var(--shadow-sm); padding: var(--sp-4);
+  cursor: pointer; display: flex; flex-direction: column; gap: 10px;
+  transition: border-color .12s, box-shadow .12s, transform .06s; font-family: var(--font-sans);
+}
+.binst:hover { border-color: var(--border-2); box-shadow: var(--shadow-md); }
+.binst.active { border-color: var(--primary-ring); box-shadow: 0 0 0 3px var(--primary-soft), var(--shadow-sm); }
+.binst-top { display: flex; align-items: center; gap: var(--sp-3); }
+.binst-ic { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; flex: none; background: var(--surface-3); color: var(--text-2); }
+.binst-ic svg { width: 18px; height: 18px; }
+.binst.active .binst-ic { background: var(--primary-soft); color: var(--primary); }
+.binst-id { min-width: 0; flex: 1; }
+.binst-id b { font-size: 13px; font-weight: 600; font-family: var(--font-mono); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.binst-id small { font-size: 11px; color: var(--text-3); font-family: var(--font-mono); }
+.binst-meta { display: flex; gap: var(--sp-4); font-size: 12px; color: var(--text-2); }
+.binst-meta span { display: inline-flex; align-items: center; gap: 5px; font-variant-numeric: tabular-nums; }
+.binst-meta svg { width: 13px; height: 13px; color: var(--text-3); }
+.binst-foot { font-size: 12px; color: var(--text-3); display: flex; align-items: center; gap: 6px; border-top: 1px solid var(--border); padding-top: 9px; }
+.binst-foot svg { width: 13px; color: var(--text-3); }
+.binst-foot b { color: var(--text-2); font-weight: 600; }
+
+/* right: detail panel */
+.bi-detail-head { display: flex; align-items: center; gap: var(--sp-3); }
+.bi-detail-head .binst-ic { width: 40px; height: 40px; }
+.bi-detail-head h3 { font-size: 16px; font-weight: 700; font-family: var(--font-mono); }
+.bi-detail-head .acts { margin-left: auto; display: flex; gap: var(--sp-2); }
+
+/* resource bars */
+.res-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-5); margin: var(--sp-5) 0; }
+.res .res-l { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--text-3); margin-bottom: 7px; }
+.res .res-l b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+.res-bar { height: 6px; border-radius: 99px; background: var(--surface-3); overflow: hidden; }
+.res-bar i { display: block; height: 100%; border-radius: 99px; background: var(--primary); transition: width .3s var(--ease); }
+.res-bar i.warn { background: var(--warn); } .res-bar i.err { background: var(--err); }
+
+/* network log */
+.net-toolbar { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; margin-bottom: var(--sp-3); }
+.net-rec { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 600; color: var(--text-2); margin-right: auto; }
+.net-rec .switch { margin: 0; }
+.net-toolbar .search { margin: 0; width: 190px; }
+.net-wrap { border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+.net-scroll { max-height: 360px; overflow-y: auto; }
+.net-wrap thead th { padding: 9px var(--sp-3); cursor: default; }
+.net-wrap tbody td { padding: 8px var(--sp-3); font-size: 12px; }
+.net-wrap tbody tr { cursor: default; }
+.net-method { font-family: var(--font-mono); font-weight: 600; font-size: 11px; }
+.m-get { color: var(--run); } .m-post { color: var(--ok); } .m-put { color: var(--warn); } .m-del { color: var(--err); }
+.net-url { font-family: var(--font-mono); color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 320px; }
+.sc { font-family: var(--font-mono); font-weight: 600; font-variant-numeric: tabular-nums; }
+.sc-2 { color: var(--ok); } .sc-3 { color: var(--run); } .sc-4 { color: var(--warn); } .sc-5 { color: var(--err); }
+.net-type-tag { font-size: 10.5px; font-weight: 600; letter-spacing: .03em; text-transform: uppercase; color: var(--text-3); }
+
+/* host container strip — the shared container the browser processes live in */
+.bi-host { padding: var(--sp-4) var(--sp-5); display: flex; align-items: center; gap: var(--sp-5); flex-wrap: wrap; margin-bottom: var(--sp-5); }
+.bi-host-l { display: flex; align-items: center; gap: var(--sp-3); min-width: 240px; }
+.bi-host-l .binst-ic { width: 40px; height: 40px; background: var(--primary-soft); color: var(--primary); }
+.bi-host-name { display: flex; align-items: center; gap: var(--sp-3); }
+.bi-host-name b { font-size: 14.5px; font-weight: 700; font-family: var(--font-mono); }
+.bi-host-l small { font-size: 11.5px; color: var(--text-3); font-family: var(--font-mono); display: block; margin-top: 2px; }
+.bi-host-r { display: flex; align-items: center; gap: var(--sp-5); margin-left: auto; flex-wrap: wrap; }
+.bi-host-r .res { min-width: 156px; }
+.bi-host-proc { font-size: 12px; color: var(--text-2); display: flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
+.bi-host-proc svg { width: 14px; height: 14px; color: var(--text-3); }
 </style>
 </head>
 <body>
@@ -817,6 +890,7 @@ tbody tr:hover .row-acts { opacity: 1; }
       <div class="nav-group">
         <div class="nav-label">System</div>
         <div class="nav-item" data-view="users"><i data-lucide="users"></i> Users <span class="badge-count" id="navUserCount">5</span></div>
+        <div class="nav-item" data-view="browsers"><i data-lucide="chrome"></i> Browsers <span class="badge-count" id="navBrowserCount">4</span></div>
         <div class="nav-item" data-view="settings"><i data-lucide="settings"></i> Settings</div>
       </div>
     </nav>
@@ -1261,6 +1335,28 @@ tbody tr:hover .row-acts { opacity: 1; }
             <div><input class="input mono" type="password" value="sk-ant-•••••••••••••••••••" /><p class="hint"><i data-lucide="check-circle-2" style="color:var(--ok)"></i> Connected · claude-opus-4-8</p></div>
           </div>
           <div style="display:flex;gap:8px;margin-top:24px;justify-content:flex-end"><button class="btn ghost">Cancel</button><button class="btn primary"><i data-lucide="check"></i> Save changes</button></div>
+        </div>
+      </div></div>
+    </section>
+
+    <!-- ===================== BROWSERS (Chrome instances in Docker pool) ===================== -->
+    <section class="view" id="view-browsers">
+      <div class="scroll"><div class="pad" style="max-width:1180px">
+        <div class="page-head">
+          <div class="t"><h2>Browsers</h2><p>Each automation run drives its own Chromium process inside the worker container. Terminate a stuck browser or inspect its network traffic.</p></div>
+          <div class="actions">
+            <button class="btn" onclick="renderBrowsers()"><i data-lucide="refresh-cw"></i> Refresh</button>
+            <button class="btn danger" onclick="terminateIdleBrowsers()"><i data-lucide="power-off"></i> Kill idle</button>
+          </div>
+        </div>
+
+        <div class="card bi-host" id="biHost"></div>
+
+        <div class="stat-grid" id="biStats"></div>
+
+        <div class="bi-layout">
+          <div class="binst-list" id="biList"></div>
+          <div class="card card-pad" id="biDetail"></div>
         </div>
       </div></div>
     </section>
@@ -1756,7 +1852,7 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
 const CRUMB = {
   dashboard:['Dashboard'], scripts:['Scripts'], orders:['Orders'],
   parameters:['Parameters'], vendors:['Vendors'], credentials:['Credentials'],
-  users:['Users'], settings:['Settings']
+  users:['Users'], browsers:['Browsers'], settings:['Settings']
 };
 /* breadcrumb parts per view — last entry is the current (bold) page */
 function crumbParts(view){
@@ -2831,12 +2927,267 @@ window.addStep = addStep; window.deleteStep = deleteStep; window.openPalette = o
 /* expose go() for inline onclick */
 window.go = go;
 
+/* ============================================================
+   BROWSERS — Chrome instances in the Docker pool
+   ============================================================ */
+/* status → [pill class, icon, label] */
+const BI_PILL = {
+  run:  ['run',  'loader',          'Executing'],
+  idle: ['idle', 'circle',          'Idle'],
+  warn: ['warn', 'alert-triangle',  'Needs attention'],
+  err:  ['err',  'x',               'Crashed'],
+};
+/* request type → coarse filter bucket */
+const NET_BUCKET = { doc:'doc', xhr:'xhr', fetch:'xhr', script:'script', css:'other', img:'other', font:'other', ws:'other', other:'other' };
+const M_CLASS = { GET:'m-get', POST:'m-post', PUT:'m-put', PATCH:'m-put', DELETE:'m-del' };
+
+/* the shared worker container the browser processes live in (cgroup totals) */
+const BHOST = { container:'cw-worker-browsers', cid:'a91f3c77d0e2', image:'cloakbrowser:122-patched', node:'pool-node-1', cpuLimit:'4 vCPU', memLimit:4096 };
+
+let BINST = [
+  { name:'session-7f3a', pid:4821, renderers:3, status:'run', vendor:'Acme DevTools', run:'1042', captcha:'CloakBrowser → Human', started:'14:24:02', uptime:'08m 21s',
+    cpu:38, mem:512, xfer:'2.8 MB', capture:true,
+    net:[
+      ['GET','https://acme-devtools.com/checkout',200,'doc','14.2 KB','612 ms'],
+      ['GET','https://acme-devtools.com/assets/app.4f2c.js',200,'script','248 KB','89 ms'],
+      ['POST','https://acme-devtools.com/api/cart/apply-coupon',200,'xhr','1.1 KB','143 ms'],
+      ['GET','https://www.google.com/recaptcha/api2/reload',200,'xhr','3.8 KB','221 ms'],
+      ['POST','https://acme-devtools.com/api/cart/validate',422,'xhr','640 B','77 ms'],
+      ['GET','https://acme-devtools.com/img/logo.svg',304,'img','0 B','12 ms'],
+      ['POST','https://acme-devtools.com/api/order/place',500,'xhr','512 B','1.9 s'],
+    ] },
+  { name:'session-91dd', pid:4977, renderers:4, status:'run', vendor:'Atlassian', run:'1041', captcha:'CloakBrowser', started:'14:18:40', uptime:'13m 43s',
+    cpu:61, mem:870, xfer:'6.3 MB', capture:true,
+    net:[
+      ['GET','https://atlassian.com/billing/renew',200,'doc','22.0 KB','410 ms'],
+      ['GET','https://atlassian.com/static/vendor.8a1.js',200,'script','512 KB','176 ms'],
+      ['POST','https://api.atlassian.com/billing/quote',200,'xhr','4.3 KB','298 ms'],
+      ['GET','https://atlassian.com/static/theme.css',200,'css','62 KB','31 ms'],
+      ['POST','https://api.atlassian.com/billing/confirm',201,'xhr','2.0 KB','512 ms'],
+    ] },
+  { name:'session-2c08', pid:5103, renderers:2, status:'warn', vendor:'Figma', run:'1043', captcha:'Human only — awaiting operator', started:'14:31:09', uptime:'01m 12s',
+    cpu:7, mem:418, xfer:'1.1 MB', capture:true,
+    net:[
+      ['GET','https://figma.com/login',200,'doc','18.4 KB','388 ms'],
+      ['GET','https://www.hcaptcha.com/1/api.js',200,'script','41 KB','120 ms'],
+      ['GET','https://hcaptcha.com/checksiteconfig',200,'xhr','820 B','201 ms'],
+    ] },
+  { name:'session-bf52', pid:5240, renderers:1, status:'idle', vendor:null, run:null, captcha:'—', started:'13:58:21', uptime:'33m 02s',
+    cpu:1, mem:142, xfer:'0 B', capture:false,
+    net:[] },
+];
+
+let curBrowser = 0, netFilter = 'all', netSearch = '';
+
+function renderBrowsers(){
+  const running = BINST.filter(b=>b.status==='run').length;
+  const idle    = BINST.filter(b=>b.status==='idle').length;
+  const attn    = BINST.filter(b=>b.status==='warn'||b.status==='err').length;
+  const cap = 8;
+  const memUsed = BINST.reduce((s,b)=>s+b.mem,0);
+  const renderers = BINST.reduce((s,b)=>s+b.renderers,0);
+  const cpuTotal = Math.min(100, BINST.reduce((s,b)=>s+b.cpu,0));
+  const memPct = Math.round(memUsed / BHOST.memLimit * 100);
+  $('#navBrowserCount').textContent = BINST.length;
+
+  /* host container strip — cgroup totals for the whole container */
+  $('#biHost').innerHTML = `
+    <div class="bi-host-l">
+      <span class="binst-ic"><i data-lucide="container"></i></span>
+      <div>
+        <div class="bi-host-name"><b>${BHOST.container}</b><span class="pill ok"><span class="dot"></span> Running</span></div>
+        <small>${BHOST.cid} · ${BHOST.node} · ${BHOST.image}</small>
+      </div>
+    </div>
+    <div class="bi-host-r">
+      <div class="res"><div class="res-l"><span>Container CPU</span><b>${cpuTotal}% of ${BHOST.cpuLimit}</b></div><div class="res-bar"><i class="${cpuTotal>80?'err':cpuTotal>55?'warn':''}" style="width:${cpuTotal}%"></i></div></div>
+      <div class="res"><div class="res-l"><span>Container memory</span><b>${(memUsed/1024).toFixed(1)} / ${BHOST.memLimit/1024} GB</b></div><div class="res-bar"><i class="${memPct>85?'err':memPct>70?'warn':''}" style="width:${memPct}%"></i></div></div>
+      <div class="bi-host-proc"><i data-lucide="chrome"></i> ${BINST.length} browser processes · ${renderers} renderers</div>
+    </div>`;
+
+  $('#biStats').innerHTML = `
+    <div class="card stat"><div class="label"><i data-lucide="play"></i> Executing</div><div class="v num">${running}</div><div class="sub">driving a vendor checkout</div></div>
+    <div class="card stat"><div class="label"><i data-lucide="circle"></i> Idle / warm</div><div class="v num">${idle}</div><div class="sub">ready for the next run</div></div>
+    <div class="card stat"><div class="label"><i data-lucide="alert-triangle"></i> Needs attention</div><div class="v num">${attn}</div><div class="sub ${attn?'trend-down':''}">${attn?'stalled or crashed':'all healthy'}</div></div>
+    <div class="card stat"><div class="label"><i data-lucide="layers"></i> Process slots</div><div class="v num">${BINST.length} / ${cap}</div><div class="sub">${cap-BINST.length} free before backpressure</div></div>`;
+
+  if(!BINST.length){
+    $('#biList').innerHTML = '';
+    $('#biDetail').innerHTML = `<div class="empty"><i data-lucide="chrome" style="width:34px;height:34px;margin-bottom:8px"></i><p><b>No browser processes</b></p><p style="font-size:12.5px">The container is idle — Chromium processes are launched on demand when an order runs.</p></div>`;
+    lucide.createIcons(); return;
+  }
+  if(curBrowser >= BINST.length) curBrowser = 0;
+
+  $('#biList').innerHTML = BINST.map((b,i)=>{
+    const [cls,ic,lab] = BI_PILL[b.status];
+    const dot = b.status==='run' ? '<span class="dot pulse"></span>' : '<span class="dot"></span>';
+    return `<button class="binst ${i===curBrowser?'active':''}" onclick="selectBrowser(${i})">
+      <div class="binst-top">
+        <span class="binst-ic"><i data-lucide="chrome"></i></span>
+        <div class="binst-id"><b>${tx(b.name)}</b><small>PID ${b.pid} · ${b.renderers} renderer${b.renderers>1?'s':''}</small></div>
+        <span class="pill ${cls}">${dot} ${lab}</span>
+      </div>
+      <div class="binst-meta">
+        <span><i data-lucide="cpu"></i> ${b.cpu}%</span>
+        <span><i data-lucide="memory-stick"></i> ${b.mem} MB</span>
+        <span><i data-lucide="clock"></i> ${b.uptime}</span>
+      </div>
+      <div class="binst-foot"><i data-lucide="${b.run?'shopping-cart':'moon'}"></i> ${b.run?`<b>${tx(b.vendor)}</b> · Run #${b.run}`:'No active run'}</div>
+    </button>`;
+  }).join('');
+
+  renderBrowserDetail();
+  lucide.createIcons();
+}
+
+function selectBrowser(i){ curBrowser = i; netFilter = 'all'; netSearch = ''; renderBrowsers(); }
+
+function renderBrowserDetail(){
+  const b = BINST[curBrowser]; if(!b) return;
+  const [cls,ic,lab] = BI_PILL[b.status];
+  const memPct = Math.round(b.mem / BHOST.memLimit * 100);
+  const cpuCls = b.cpu>80?'err':b.cpu>55?'warn':'';
+  const memCls = b.mem>1200?'err':b.mem>800?'warn':'';
+  $('#biDetail').innerHTML = `
+    <div class="bi-detail-head">
+      <span class="binst-ic"><i data-lucide="chrome"></i></span>
+      <div style="min-width:0">
+        <h3>${tx(b.name)}</h3>
+        <span class="pill ${cls}" style="margin-top:4px">${b.status==='run'?'<span class="dot pulse"></span>':'<span class="dot"></span>'} ${lab}</span>
+      </div>
+      <div class="acts">
+        <button class="btn sm" onclick="openLiveBrowser(${curBrowser})" title="Open the live noVNC view"><i data-lucide="monitor-play"></i> View live</button>
+        <button class="btn sm" onclick="restartBrowser(${curBrowser})"><i data-lucide="rotate-cw"></i> Restart</button>
+        <button class="btn sm danger" onclick="askTerminateBrowser(${curBrowser})"><i data-lucide="skull"></i> Kill process</button>
+      </div>
+    </div>
+
+    <div class="res-grid" style="grid-template-columns:repeat(3,1fr)">
+      <div class="res"><div class="res-l"><span>CPU (process tree)</span><b>${b.cpu}%</b></div><div class="res-bar"><i class="${cpuCls}" style="width:${b.cpu}%"></i></div></div>
+      <div class="res"><div class="res-l"><span>Memory (RSS)</span><b>${b.mem} MB</b></div><div class="res-bar"><i class="${memCls}" style="width:${Math.max(3,memPct)}%"></i></div></div>
+      <div class="res"><div class="res-l"><span>Transferred</span><b>${b.xfer}</b></div><div class="res-bar"><i style="width:${Math.min(100, parseFloat(b.xfer)*12||3)}%"></i></div></div>
+    </div>
+    <p class="hint" style="margin:-8px 0 4px"><i data-lucide="info"></i> CPU &amp; RSS summed from <span class="mono">/proc/${b.pid}</span> and its ${b.renderers} renderer${b.renderers>1?'s':''}. Transferred is from CDP — byte-level net I/O is shared at the container level.</p>
+
+    <dl class="dl" style="grid-template-columns:130px 1fr;margin-top:16px">
+      <dt>PID</dt><dd class="mono">${b.pid} <span class="cell-mut">· ${b.renderers} renderer${b.renderers>1?'s':''}</span></dd>
+      <dt>Container</dt><dd class="mono">${BHOST.container} <span class="cell-mut">(shared)</span></dd>
+      <dt>Started</dt><dd class="mono">${b.started} · up ${b.uptime}</dd>
+      <dt>Current run</dt><dd>${b.run?`<span class="cell-strong">${tx(b.vendor)}</span> · <span class="id-chip">#${b.run}</span>`:'<span class="cell-mut">— idle —</span>'}</dd>
+      <dt>CAPTCHA</dt><dd>${tx(b.captcha)}</dd>
+    </dl>
+
+    <div class="divider"></div>
+
+    <div class="section-head" style="margin-bottom:12px">
+      <h3>Network log</h3>
+      <span class="count-chip" id="biNetCount">0</span>
+    </div>
+
+    <div class="net-toolbar">
+      <span class="net-rec">
+        <label class="switch"><input type="checkbox" ${b.capture?'checked':''} onchange="toggleCapture(${curBrowser})"><span class="track"></span></label>
+        <i data-lucide="${b.capture?'circle-dot':'circle-pause'}" style="width:15px;color:${b.capture?'var(--err)':'var(--text-3)'}"></i>
+        ${b.capture?'Capturing':'Paused'}
+      </span>
+      <div class="seg" id="biNetFilter">
+        ${['all','xhr','doc','script','other'].map(f=>`<button class="${f===netFilter?'active':''}" onclick="setNetFilter('${f}')">${f==='all'?'All':f==='xhr'?'XHR':f.charAt(0).toUpperCase()+f.slice(1)}</button>`).join('')}
+      </div>
+      <div class="search"><i data-lucide="search"></i><input placeholder="Filter URL…" value="${esc(netSearch)}" oninput="onNetSearch(this.value)" /></div>
+      <button class="btn sm ghost" onclick="clearNet(${curBrowser})"><i data-lucide="eraser"></i> Clear</button>
+      <button class="btn sm" onclick="downloadHar(${curBrowser})"><i data-lucide="download"></i> HAR</button>
+    </div>
+
+    <div class="net-wrap"><div class="net-scroll">
+      <table>
+        <thead><tr><th style="width:64px">Method</th><th>URL</th><th style="width:64px">Status</th><th style="width:72px">Type</th><th style="width:74px">Size</th><th style="width:78px">Time</th></tr></thead>
+        <tbody id="biNetRows"></tbody>
+      </table>
+    </div></div>`;
+  renderNet();
+}
+
+function renderNet(){
+  const b = BINST[curBrowser]; if(!b) return;
+  const body = $('#biNetRows');
+  if(!b.capture){
+    body.innerHTML = `<tr><td colspan="6"><div class="empty" style="padding:28px"><i data-lucide="circle-pause" style="width:28px;height:28px;margin-bottom:6px"></i><p>Capture is paused for this instance.</p><p style="font-size:12px">Toggle the recorder above to start logging requests.</p></div></td></tr>`;
+    $('#biNetCount').textContent = '0';
+    lucide.createIcons(); return;
+  }
+  const q = netSearch.trim().toLowerCase();
+  const rows = b.net.filter(r=>{
+    const bucket = NET_BUCKET[r[3]] || 'other';
+    if(netFilter!=='all' && bucket!==netFilter) return false;
+    if(q && !r[1].toLowerCase().includes(q)) return false;
+    return true;
+  });
+  $('#biNetCount').textContent = String(rows.length);
+  if(!rows.length){
+    body.innerHTML = `<tr><td colspan="6"><div class="empty" style="padding:24px">No requests match this filter.</div></td></tr>`;
+    return;
+  }
+  body.innerHTML = rows.map(r=>{
+    const sc = String(r[2])[0];
+    return `<tr>
+      <td><span class="net-method ${M_CLASS[r[0]]||''}">${r[0]}</span></td>
+      <td><span class="net-url" title="${esc(r[1])}">${tx(r[1])}</span></td>
+      <td><span class="sc sc-${sc}">${r[2]}</span></td>
+      <td><span class="net-type-tag">${r[3]}</span></td>
+      <td class="mono cell-mut">${r[4]}</td>
+      <td class="mono cell-mut">${r[5]}</td>
+    </tr>`;
+  }).join('');
+}
+
+function setNetFilter(f){ netFilter = f; document.querySelectorAll('#biNetFilter button').forEach(btn=>btn.classList.toggle('active', btn.textContent.toLowerCase()===(f==='all'?'all':f==='xhr'?'xhr':f))); renderNet(); }
+function onNetSearch(v){ netSearch = v; renderNet(); }
+function toggleCapture(i){ BINST[i].capture = !BINST[i].capture; renderBrowserDetail(); lucide.createIcons(); }
+function clearNet(i){ BINST[i].net = []; renderBrowserDetail(); lucide.createIcons(); }
+function downloadHar(i){ /* mockup: would stream <name>.har from the container */ }
+function openLiveBrowser(i){ /* mockup: would open the noVNC live view for the container */ }
+
+function restartBrowser(i){
+  const b = BINST[i];
+  confirmAction({
+    title:'Restart browser process', icon:'rotate-cw', confirmLabel:'Restart',
+    message:`Relaunch the Chromium process for <b>${tx(b.name)}</b>? The current run is re-queued and the network log cleared. PID changes.`,
+    onConfirm:()=>{ b.status='run'; b.uptime='00m 03s'; b.cpu=12; b.mem=180; b.pid=b.pid+Math.floor(7+b.renderers*13); b.net=[]; b.capture=true; renderBrowsers(); }
+  });
+}
+
+function askTerminateBrowser(i){
+  const b = BINST[i];
+  const warn = b.run ? ` It is currently running <b>${tx(b.vendor)} · #${b.run}</b>, which will be marked failed.` : '';
+  confirmAction({
+    title:'Kill browser process', icon:'skull', confirmLabel:'Kill process',
+    message:`Send SIGKILL to <b>${tx(b.name)}</b> (PID ${b.pid}) and its ${b.renderers} renderer${b.renderers>1?'s':''}?${warn} The container keeps running.`,
+    onConfirm:()=>{ BINST.splice(i,1); if(curBrowser>=BINST.length) curBrowser=Math.max(0,BINST.length-1); renderBrowsers(); }
+  });
+}
+
+function terminateIdleBrowsers(){
+  const idle = BINST.filter(b=>b.status==='idle').length;
+  if(!idle){ confirmAction({title:'No idle processes', icon:'info', confirmLabel:'OK', message:'Every browser process is currently busy — nothing to kill.', onConfirm:null}); return; }
+  confirmAction({
+    title:'Kill idle processes', icon:'skull', confirmLabel:`Kill ${idle}`,
+    message:`Kill <b>${idle}</b> idle browser process${idle>1?'es':''} to free memory? Busy processes are left untouched.`,
+    onConfirm:()=>{ BINST = BINST.filter(b=>b.status!=='idle'); curBrowser=0; renderBrowsers(); }
+  });
+}
+
+window.renderBrowsers = renderBrowsers; window.selectBrowser = selectBrowser;
+window.setNetFilter = setNetFilter; window.onNetSearch = onNetSearch; window.toggleCapture = toggleCapture;
+window.clearNet = clearNet; window.downloadHar = downloadHar; window.openLiveBrowser = openLiveBrowser;
+window.restartBrowser = restartBrowser; window.askTerminateBrowser = askTerminateBrowser; window.terminateIdleBrowsers = terminateIdleBrowsers;
+
 /* ============ init ============ */
 curOrder = OMAP['1042'];
 renderSteps();
 select(9);
 applyZoom();
 renderUsers();
+renderBrowsers();
 go('orders');
 lucide.createIcons();
 </script>
