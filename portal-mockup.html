@@ -982,7 +982,7 @@ tbody tr:hover .row-acts { opacity: 1; }
       <div class="scroll"><div class="pad">
         <div class="page-head">
           <div class="t"><h2>Orders</h2><p>Each order is a cart of products from one vendor, fulfilled by running its flow.</p></div>
-          <div class="actions"><button class="btn primary"><i data-lucide="plus"></i> New order</button></div>
+          <div class="actions"><button class="btn primary" onclick="openOrderCreate()"><i data-lucide="plus"></i> New order</button></div>
         </div>
         <div class="card table-wrap">
           <div class="toolbar">
@@ -1014,6 +1014,7 @@ tbody tr:hover .row-acts { opacity: 1; }
         </div>
         <div class="exec-actions">
           <button class="btn sm danger"><i data-lucide="trash-2"></i> Delete</button>
+          <button class="btn sm" onclick="openOrderEdit()"><i data-lucide="pencil"></i> Edit</button>
           <button class="btn sm primary" onclick="executeOrder()"><i data-lucide="play"></i> Execute</button>
         </div>
       </div>
@@ -1053,6 +1054,62 @@ tbody tr:hover .row-acts { opacity: 1; }
               <div class="section-head"><h3>Execution history</h3><span class="count-chip" id="attCount">0</span></div>
               <p class="hint" style="margin:-8px 0 16px"><i data-lucide="info"></i> Every <b style="color:var(--text-2)">Execute</b> records an attempt. Open one to inspect its steps and screenshots.</p>
               <div class="card table-wrap" id="attBody"></div>
+            </div>
+          </div>
+        </div>
+      </div></div>
+    </section>
+
+    <!-- ===================== ORDER CREATE (new order) ===================== -->
+    <section class="view" id="view-order-create">
+      <div class="exec-head">
+        <button class="icon-btn back" title="Back to orders" aria-label="Back to orders" onclick="go('orders')"><i data-lucide="arrow-left"></i></button>
+        <div class="exec-title">
+          <div class="row1">
+            <span class="flow-ic tint-indigo" style="width:30px;height:30px"><i data-lucide="shopping-cart"></i></span>
+            <h2 id="ocViewTitle">New order</h2>
+          </div>
+          <div class="row2">
+            <i data-lucide="info" style="width:13px"></i><span id="ocViewSub">Pick a vendor and the flow that fulfils it — you'll add products next.</span>
+          </div>
+        </div>
+        <div class="exec-actions">
+          <button class="btn sm" id="ocCancelBtn" onclick="cancelOrderForm()">Cancel</button>
+          <button class="btn sm primary" onclick="saveOrderForm()"><i data-lucide="check"></i> <span id="ocSaveLabel">Create order</span></button>
+        </div>
+      </div>
+
+      <div class="scroll"><div class="pad">
+        <div style="max-width:560px">
+          <div class="card card-pad">
+            <div class="section-head"><h3>Order details</h3></div>
+
+            <div class="alert err" id="ocErr" style="display:none">
+              <i data-lucide="alert-circle"></i>
+              <div><b id="ocErrTitle">Can't create order</b><span id="ocErrMsg"></span></div>
+            </div>
+
+            <div class="fld">
+              <label for="ocName">Order name</label>
+              <input class="input" id="ocName" placeholder="e.g. Q3 IDE license refresh" />
+              <span class="help"><i data-lucide="tag"></i> A label to recognise this order. Defaults to the vendor and flow if left blank.</span>
+            </div>
+
+            <div class="fld">
+              <label for="ocVendor">Vendor <span class="req">*</span></label>
+              <select class="input" id="ocVendor" onchange="onOrderVendorChange()">
+                <option value="">— Select a vendor —</option>
+              </select>
+              <span class="help"><i data-lucide="store"></i> Every product in this order comes from one vendor.</span>
+              <div class="alert warn" id="ocVendorWarn" style="display:none;margin:10px 0 0"><i data-lucide="alert-triangle"></i><div>Changing the vendor will clear the products already in this order.</div></div>
+            </div>
+
+            <div class="fld" style="margin-bottom:0">
+              <label for="ocFlow">Flow <span class="req">*</span></label>
+              <select class="input" id="ocFlow" disabled>
+                <option value="">— Select a vendor first —</option>
+              </select>
+              <span class="help"><i data-lucide="git-branch"></i> The automation that drives the vendor site and checks this order out.</span>
             </div>
           </div>
         </div>
@@ -1705,6 +1762,9 @@ const CRUMB = {
 function crumbParts(view){
   if(view==='vendor-detail') return [{l:'Vendors',v:'vendors'},{l:curVendor?curVendor.name:'Vendor'}];
   if(view==='product-detail')return [{l:'Vendors',v:'vendors'},{l:curVendor?curVendor.name:'Vendor',v:'vendor-detail'},{l:curProdName||'Product'}];
+  if(view==='order-create')  return _orderEdit
+    ? [{l:'Orders',v:'orders'},{l:_orderEdit.name,v:'order-detail'},{l:'Edit'}]
+    : [{l:'Orders',v:'orders'},{l:'New order'}];
   if(view==='order-detail')  return [{l:'Orders',v:'orders'},{l:curOrder?curOrder.name:'Order'}];
   if(view==='executions')    return [{l:'Orders',v:'orders'},{l:curOrder?curOrder.name:'Order',v:'order-detail'},{l:'Run #'+curAttempt}];
   if(view==='builder')       return [{l:'Scripts',v:'scripts'},{l:curScript?curScript.name:'Script'}];
@@ -1714,7 +1774,7 @@ function crumbParts(view){
 function go(view){
   let navTarget = view;
   if(view==='vendor-detail'||view==='product-detail') navTarget='vendors';
-  if(view==='order-detail'||view==='executions') navTarget='orders';
+  if(view==='order-detail'||view==='executions'||view==='order-create') navTarget='orders';
   if(view==='user-detail') navTarget='users';
   if(view==='builder') navTarget='scripts';
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.view===navTarget));
@@ -2093,16 +2153,20 @@ const orderStatus = o => { const a=lastAttempt(o); return a?a.st:'draft'; };
 const totalQty    = o => o.items.reduce((s,i)=>s+i.qty,0);
 
 /* ----- orders list ----- */
-$('#orderRows').innerHTML = ORDERS.map(o=>{
-  const v = VMAP[o.vendorId]; const [cls,ic,lab] = ORD_PILL[orderStatus(o)];
-  return `<tr onclick="openOrder('${o.id}')">
-    <td><div style="display:flex;flex-direction:column;gap:3px"><span class="cell-strong">${o.name}</span><span class="id-chip" style="align-self:flex-start">order_${o.id}</span></div></td>
-    <td><div class="flow-cell"><span class="flow-ic ${v.tint}"><i data-lucide="${v.icon}"></i></span><span class="cell-strong">${v.name}</span></div></td>
-    <td>${o.items.length} <span class="cell-mut">· ${totalQty(o)} seats</span></td>
-    <td class="cell-mut">${o.flow} <span class="id-chip">${o.flowVer}</span></td>
-    <td><span class="pill ${cls}"><i data-lucide="${ic}"></i> ${lab}</span></td>
-    <td class="cell-mut mono">${o.updated}</td></tr>`;
-}).join('');
+function renderOrders(){
+  $('#orderRows').innerHTML = ORDERS.map(o=>{
+    const v = VMAP[o.vendorId]; const [cls,ic,lab] = ORD_PILL[orderStatus(o)];
+    return `<tr onclick="openOrder('${o.id}')">
+      <td><div style="display:flex;flex-direction:column;gap:3px"><span class="cell-strong">${o.name}</span><span class="id-chip" style="align-self:flex-start">order_${o.id}</span></div></td>
+      <td><div class="flow-cell"><span class="flow-ic ${v.tint}"><i data-lucide="${v.icon}"></i></span><span class="cell-strong">${v.name}</span></div></td>
+      <td>${o.items.length} <span class="cell-mut">· ${totalQty(o)} seats</span></td>
+      <td class="cell-mut">${o.flow} <span class="id-chip">${o.flowVer}</span></td>
+      <td><span class="pill ${cls}"><i data-lucide="${ic}"></i> ${lab}</span></td>
+      <td class="cell-mut mono">${o.updated}</td></tr>`;
+  }).join('');
+  lucide.createIcons();
+}
+renderOrders();
 
 /* ----- order detail ----- */
 function openOrder(id){ curOrder = OMAP[id]; renderOrderDetail(); go('order-detail'); }
@@ -2227,6 +2291,94 @@ window.openOrder=openOrder; window.openExecution=openExecution; window.executeOr
 window.openAddItem=openAddItem; window.populateVariants=populateVariants;
 window.addItemConfirm=addItemConfirm; window.closeAddItem=closeAddItem;
 window.bumpQty=bumpQty; window.setQty=setQty; window.removeItem=removeItem;
+
+/* ----- order form: shared by "new order" (create) and "edit" (update vendor/flow) ----- */
+let _ocnt = ORDERS.reduce((m,o)=>Math.max(m, parseInt(o.id,10)||0), 0);
+let _orderEdit = null; // null = create mode; otherwise the order being edited
+
+function fillVendorSelect(selectedId){
+  $('#ocVendor').innerHTML = '<option value="">— Select a vendor —</option>' +
+    VENDORS.map(v=>`<option value="${v.id}"${v.id===selectedId?' selected':''}>${tx(v.name)}</option>`).join('');
+}
+function fillFlowSelect(vendorId, selectedFlow){
+  const v = VMAP[vendorId], sel = $('#ocFlow');
+  if(!v){ sel.innerHTML = '<option value="">— Select a vendor first —</option>'; sel.disabled = true; return; }
+  sel.disabled = false;
+  sel.innerHTML = '<option value="">— Select a flow —</option>' +
+    v.flows.map(f=>`<option value="${esc(f)}"${f===selectedFlow?' selected':''}>${tx(f)}</option>`).join('');
+}
+function openOrderCreate(){
+  _orderEdit = null;
+  $('#ocViewTitle').textContent = 'New order';
+  $('#ocViewSub').textContent = "Pick a vendor and the flow that fulfils it — you'll add products next.";
+  $('#ocSaveLabel').textContent = 'Create order';
+  $('#ocErrTitle').textContent = "Can't create order";
+  $('#ocName').value = '';
+  fillVendorSelect('');
+  fillFlowSelect('', '');
+  $('#ocVendorWarn').style.display = 'none';
+  hideOcErr();
+  go('order-create');
+  lucide.createIcons();
+  setTimeout(()=>$('#ocVendor').focus(), 50);
+}
+function openOrderEdit(){
+  const o = curOrder; if(!o) return;
+  _orderEdit = o;
+  $('#ocViewTitle').textContent = 'Edit order';
+  $('#ocViewSub').textContent = 'Update the vendor and flow for this order.';
+  $('#ocSaveLabel').textContent = 'Save changes';
+  $('#ocErrTitle').textContent = "Can't save order";
+  $('#ocName').value = o.name;
+  fillVendorSelect(o.vendorId);
+  fillFlowSelect(o.vendorId, o.flow);
+  $('#ocVendorWarn').style.display = 'none';
+  hideOcErr();
+  go('order-create');
+  lucide.createIcons();
+  setTimeout(()=>$('#ocVendor').focus(), 50);
+}
+function onOrderVendorChange(){
+  const vid = $('#ocVendor').value;
+  fillFlowSelect(vid, '');
+  // editing an order that already has products → warn that switching vendor clears the cart
+  const switching = _orderEdit && vid && vid!==_orderEdit.vendorId && _orderEdit.items.length;
+  $('#ocVendorWarn').style.display = switching ? 'flex' : 'none';
+  lucide.createIcons();
+  hideOcErr();
+}
+function cancelOrderForm(){ go(_orderEdit ? 'order-detail' : 'orders'); }
+function showOcErr(msg){ $('#ocErrMsg').textContent = ' '+msg; $('#ocErr').style.display='flex'; lucide.createIcons(); }
+function hideOcErr(){ $('#ocErr').style.display='none'; }
+function saveOrderForm(){
+  const v = VMAP[$('#ocVendor').value];
+  const flow = $('#ocFlow').value;
+  if(!v){ showOcErr('Select a vendor for this order.'); $('#ocVendor').focus(); return; }
+  if(!flow){ showOcErr('Select the flow that fulfils this order.'); $('#ocFlow').focus(); return; }
+  const name = $('#ocName').value.trim() || `${v.name} — ${flow}`;
+
+  if(_orderEdit){
+    const o = _orderEdit;
+    if(o.vendorId !== v.id) o.items = []; // products belong to a vendor; switching vendor clears the cart
+    o.name = name; o.vendorId = v.id; o.flow = flow; o.updated = 'Just now';
+    curOrder = o;
+    renderOrders();
+    renderOrderDetail();
+    go('order-detail');
+    return;
+  }
+
+  const id = String(++_ocnt);
+  const today = new Date().toISOString().slice(0,10);
+  const o = { id, name, vendorId:v.id, flow, flowVer:'v1', created:today, updated:'Just now', items:[], attempts:[] };
+  ORDERS.unshift(o); OMAP[id] = o;
+  curOrder = o;
+  renderOrders();
+  renderOrderDetail();
+  go('order-detail');
+}
+window.openOrderCreate=openOrderCreate; window.openOrderEdit=openOrderEdit;
+window.onOrderVendorChange=onOrderVendorChange; window.cancelOrderForm=cancelOrderForm; window.saveOrderForm=saveOrderForm;
 
 const CREDS = [
   ['cred:acme-login','Login','Acme DevTools','2 min ago'],
